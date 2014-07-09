@@ -19,6 +19,7 @@ package com.example.android.BluetoothTest;
 import java.io.IOException;
 import java.util.Random;
 
+import com.crittercism.app.Crittercism;
 import com.example.android.BluetoothChat.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
@@ -117,6 +118,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	
 	GoogleMap mMap;
 	LocationManager locationManager ;
+	static double myLong;
+	static double myLat;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -126,7 +129,15 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 
 		// Set up the window layout
 		setContentView(R.layout.main);
-
+		if(LoginActivity.flag_debug==1)
+		{
+			Crittercism.initialize(getApplicationContext(),"53b3bb7b07229a5a86000006");
+			try {
+				throw new Exception("Exception Reason");
+			} catch (Exception exception) {
+				Crittercism.logHandledException(exception);
+			}
+		}
 		mMap = ((SupportMapFragment)getSupportFragmentManager()
                 .findFragmentById(R.id.mapgame)).getMap();
 		
@@ -145,11 +156,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
         
 	    // Register the listener with the Location Manager to receive location updates
 	    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);	    
-//	    mSendButton = (Button) findViewById(R.id.button_send);
-//		mSendButton.setEnabled(false);
-////		mSendButton.setActivated(false);
-//		mSendButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firered));
-//		mSendButton.setVisibility(View.INVISIBLE);
 		mPlayButton = (Button) findViewById(R.id.button_play);
 		mPlayButton.setEnabled(true);
 		mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firewhite));
@@ -166,31 +172,13 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 		if (D)
 			Log.e(TAG, "++ ON START ++");
 
-		// If BT is not on, request that it be enabled.
-		// setupChat() will then be called during onActivityResult
-//		if (!mBluetoothAdapter.isEnabled()) {
-////			Intent enableIntent = new Intent(
-////					BluetoothAdapter.ACTION_REQUEST_ENABLE);
-////			startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-//			mBluetoothAdapter.enable();
-//			
-//			setupChat();
-////			if( mBluetoothAdapter.isEnabled())
-////			{
-////				setupChat();
-////			}
-////			else
-////			{
-////				Toast.makeText(this, R.string.bt_not_enabled_leaving,
-////						Toast.LENGTH_SHORT).show();
-////			}
-//			// Otherwise, setup the chat session
-//		} 
+ 
 		if (!mBluetoothAdapter.isEnabled()) {
 	        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 	        startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
 	    // Otherwise, setup the chat session
-	    } else {
+	    } else
+		{
 			if (mChatService == null)
 				setupChat();
 			ensureDiscoverable();
@@ -246,6 +234,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 								}
 								Log.e(TAG,
 										"em da o day-----------------> bang chiu ----------------->");
+								
+								
 								finish();
 							}
 						})
@@ -296,8 +286,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 					flag_play = (flag_play+1)%2;
 					if(flag_play==0)
 					{
-//						mPlayButton.setEnabled(true);
-//						mPlayButton.setVisibility(View.VISIBLE);
+
 						mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firewhite));
 						mPlayButton.setText("PLAY");
 						if(flag_shoot==1)
@@ -313,8 +302,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 					}
 					else if(flag_play==1)
 					{
-//						mPlayButton.setEnabled(false);
-//						mPlayButton.setVisibility(View.INVISIBLE);
 						mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firered));
 						mPlayButton.setText("SHOT");
 						flag_shoot = 1;
@@ -329,18 +316,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			}
 		});
 		
-//		mSendButton.setOnClickListener(new OnClickListener() {
-//			public void onClick(View v) {
-//
-//            		String message = "You die!";
-//	                sendMessage(message);
-//	                mPlayButton.setEnabled(true);
-//	                mPlayButton.setVisibility(View.VISIBLE);
-//	                flag_play = 0;
-//	                mSendButton.setEnabled(false);
-//	                mSendButton.setVisibility(View.INVISIBLE);
-//			}
-//		});
+
 
 		// Initialize the BluetoothChatService to perform bluetooth connections
 		mChatService = new BluetoothService(this, mHandler);
@@ -415,16 +391,14 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 					.show();
 			return;
 		}
-
 		// Check that there's actually something to send
 		if (message.length() > 0) {
 			// Get the message bytes and tell the BluetoothChatService to write
 			byte[] send = message.getBytes();
 			mChatService.write(send);
-
 			// Reset out string buffer to zero and clear the edit text field
 			mOutStringBuffer.setLength(0);
-			// mOutEditText.setText(mOutStringBuffer);
+
 		}
 	}
 
@@ -482,15 +456,11 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 				break;
 			case MESSAGE_WRITE:
 				byte[] writeBuf = (byte[]) msg.obj;
-				// construct a string from the buffer
-				// String writeMessage = new String(writeBuf);
 				 mConversationArrayAdapter.clear();
-//	                mConversationArrayAdapter.add("I win");
 				 if(flag_win==1)
 				 {
 	                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.win));
 	                mResultButton.setVisibility(View.VISIBLE);
-//	                mResultButton.setTextColor("0f1bb0");
 	                mResultButton.setText("YOU WIN");
 	                flag_win = 0;
 				 }
@@ -499,9 +469,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	                byte[] readBuf = (byte[]) msg.obj;
 	                // construct a string from the valid bytes in the buffer
 	                String readMessage = new String(readBuf, 0, msg.arg1);
-	                //mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
-//	                mConversationArrayAdapter.clear();
-//	                mConversationArrayAdapter.add("I die");
 	                if(readMessage.equals("You die!") )
 	                {
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
@@ -514,10 +481,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
 	                	mResultButton.setVisibility(View.INVISIBLE);
 	                }
-//	                requestWindowFeature(Window.FEATURE_NO_TITLE);
-//	                getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//	                        WindowManager.LayoutParams.FLAG_FULLSCREEN);
-//	                setContentView(new RenderView(getBaseContext()));
+
 	                break;
 			case MESSAGE_DEVICE_NAME:
 				// save the connected device's name
@@ -593,12 +557,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			serverIntent = new Intent(this, DeviceListActivity.class);
 			startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
 			return true;
-//		case R.id.insecure_connect_scan:
-//			// Launch the DeviceListActivity to see devices and do scan
-//			serverIntent = new Intent(this, DeviceListActivity.class);
-//			startActivityForResult(serverIntent,
-//					REQUEST_CONNECT_DEVICE_INSECURE);
-//			return true;
 		case R.id.discoverable:
 			// Ensure this device is discoverable by others
 			ensureDiscoverable();
@@ -631,10 +589,20 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 		if (D)
 			Log.e(TAG, "-- ON Change Location --");
 		LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+//		mylocation.setLongitude(location.getLongitude());
+//		mylocation.setLatitude(location.getLatitude());
+		myLong = location.getLongitude();
+		myLat = location.getLatitude();
 		
-		LatLng latLng1 = new LatLng(location.getLatitude() -0.00647, location.getLongitude() + 0.00494);
-		LatLng latLng2 = new LatLng(location.getLatitude() +0.00422, location.getLongitude() + 0.00773);
-		LatLng latLng3 = new LatLng(location.getLatitude() +0.00422, location.getLongitude() - 0.00772);
+		// (1)request get infor user
+		// (2)parse to get id -> long, lat -> convert string to double
+		// (3)assign long,lat to every object
+		// (4)display on map 
+		//=> create handler here -> parameter is function implement (1),(2),(3),(4). 
+		
+		LatLng latLng1 = new LatLng(location.getLatitude() - 0.00647, location.getLongitude() + 0.00494);
+		LatLng latLng2 = new LatLng(location.getLatitude() + 0.00422, location.getLongitude() + 0.00773);
+		LatLng latLng3 = new LatLng(location.getLatitude() + 0.00422, location.getLongitude() - 0.00772);
 		LatLng latLng4 = new LatLng(location.getLatitude() - 0.00864, location.getLongitude() - 0.00386);
 		
 		Float acc = location.getAccuracy();
@@ -665,6 +633,9 @@ GooglePlayServicesClient.OnConnectionFailedListener{
         .icon(bitmapDescriptor));
        
         mMap.animateCamera(cameraUpdate);
+        
+        PostHttp.casepost = PostHttp.TRACKING;
+		new PostHttp().execute("");
 	}
 
 	@Override
