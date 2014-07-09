@@ -1,0 +1,61 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"   
+        
+        >
+
+<!-- android:background="@drawable/bgblack" -->      
+        
+        <LinearLayout
+            android:id="@+id/lobtnJG"
+		    android:orientation="horizontal"
+		    android:layout_width="300dp"
+		    android:layout_height="wrap_content"
+		    android:layout_centerHorizontal="true"
+		    android:layout_centerVertical="true"
+		    >
+		     
+	         
+	        <Button
+	        android:id="@+id/btnJoinGame"
+	        android:layout_width="0.0dip"
+	        android:layout_height="fill_parent"
+	        android:text="Join Game"
+	        android:layout_weight="1.0" />
+		         
+		</LinearLayout>
+		<!-- <LinearLayout
+		    android:id="@+id/req"
+		    android:layout_below="@+id/lobtnJG"
+		    android:orientation="horizontal"
+		    android:layout_width="300dp"
+		    android:layout_height="wrap_content"
+		   	android:layout_centerHorizontal="true"
+		    >
+		     
+	        <Button
+	        android:id="@+id/btnReq"
+	        android:layout_width="0.0dip"
+	        android:layout_height="fill_parent"
+	        android:text="Sign Out"
+	        android:layout_weight="1.0" />
+		         
+		</LinearLayout>
+		<LinearLayout
+		    android:layout_below="@+id/req"
+		    android:orientation="horizontal"
+		    android:layout_width="300dp"
+		    android:layout_height="wrap_content"
+		   	android:layout_centerHorizontal="true"
+		    >
+		     
+	        <TextView
+	        android:id="@+id/tvRespond"
+	        android:layout_height="fill_parent"
+	        android:layout_width="300dp"
+	        android:layout_weight="1.0" />
+		         
+		</LinearLayout> -->
+       <!--  Login Form Ends -->
+
+    </RelativeLayout>

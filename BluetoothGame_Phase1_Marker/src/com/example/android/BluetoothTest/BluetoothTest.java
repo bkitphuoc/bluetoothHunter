@@ -121,6 +121,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	LocationManager locationManager ;
 	static double myLong;
 	static double myLat;
+	String address = "target_address";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -130,6 +131,9 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 
 		// Set up the window layout
 		setContentView(R.layout.main);
+		Bundle extras = getIntent().getExtras();
+		address = extras.getString("device_address");
+
 		if(LoginActivity.flag_debug==1)
 		{
 			Crittercism.initialize(getApplicationContext(),"53b3bb7b07229a5a86000006");
@@ -324,6 +328,10 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 
 		// Initialize the buffer for outgoing messages
 		mOutStringBuffer = new StringBuffer("");
+		
+		BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+		// Attempt to connect to the device
+		mChatService.connect(device, true);
 	}
 
 	@Override
