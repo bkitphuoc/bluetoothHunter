@@ -23,7 +23,7 @@
     <fragment 
           android:id="@+id/mapgame"
           android:layout_width="match_parent"
-          android:layout_height="match_parent"
+          android:layout_height="400dip"
           android:name="com.google.android.gms.maps.SupportMapFragment" />
      <LinearLayout
         android:orientation="horizontal"

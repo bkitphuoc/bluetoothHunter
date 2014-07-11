@@ -21,10 +21,13 @@
 	        android:layout_width="0.0dip"
 	        android:layout_height="fill_parent"
 	        android:text="Join Game"
-	        android:layout_weight="1.0" />
+	        android:layout_weight="1.0" 
+	        android:layout_margin="30dip"/>
+	        
+	        
 		         
 		</LinearLayout>
-		<!-- <LinearLayout
+		<LinearLayout
 		    android:id="@+id/req"
 		    android:layout_below="@+id/lobtnJG"
 		    android:orientation="horizontal"
@@ -32,13 +35,14 @@
 		    android:layout_height="wrap_content"
 		   	android:layout_centerHorizontal="true"
 		    >
-		     
-	        <Button
+		     <Button
 	        android:id="@+id/btnReq"
 	        android:layout_width="0.0dip"
 	        android:layout_height="fill_parent"
 	        android:text="Sign Out"
-	        android:layout_weight="1.0" />
+	        android:layout_weight="1.0" 
+	        android:layout_margin="30dip"/>
+	        
 		         
 		</LinearLayout>
 		<LinearLayout
@@ -55,7 +59,7 @@
 	        android:layout_width="300dp"
 	        android:layout_weight="1.0" />
 		         
-		</LinearLayout> -->
+		</LinearLayout>
        <!--  Login Form Ends -->
 
     </RelativeLayout>
