@@ -15,7 +15,7 @@
      limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.BluetoothChat"
+    package="com.example.android.BluetoothTest"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -100,7 +100,7 @@
 			android:value="AIzaSyDUoL16VP6m5eEg8YTvt6gXeTn83o10RXU"/> -->
 			<meta-data
 			android:name="com.google.android.maps.v2.API_KEY"
-			android:value="AIzaSyCGarSVL9WPQ_8gSnphlewwKl5ro1EtX00"/>
+			android:value="AIzaSyBU6PkkDUcEJlC5wcxwW_JQnXWeyEK27ug"/>
 
     </application>
 

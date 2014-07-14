@@ -20,36 +20,47 @@ import java.io.IOException;
 import java.util.Random;
 
 import com.crittercism.app.Crittercism;
-import com.example.android.BluetoothChat.R;
+import com.example.android.BluetoothTest.GetHttp.OnPost;
+import com.example.android.BluetoothTest.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.UiSettings;
 
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Paint.Align;
+import android.graphics.Paint.Style;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
+import android.os.Message;                    
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -68,10 +79,22 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.acra.*;
+import org.acra.annotation.*;
+import org.apache.http.client.methods.*;
+import org.apache.http.client.*;
+import org.apache.http.impl.client.*;
+import org.apache.http.*;
+import org.apache.http.util.*;
+
 /**
  * This is the main Activity that displays the current chat session.
  */
-public class BluetoothTest extends FragmentActivity implements LocationListener,GooglePlayServicesClient.ConnectionCallbacks,
+public class BluetoothTest extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
 GooglePlayServicesClient.OnConnectionFailedListener{
 	// Debugging
 	private static final String TAG = "BluetoothChat";
@@ -89,6 +112,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	public static final String DEVICE_NAME = "device_name";
 	public static final String TOAST = "toast";
 
+	
 	// Intent request codes
 	private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
 	private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
@@ -99,13 +123,13 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	// Layout Views
 	private ListView mConversationView;
 	// private EditText mOutEditText;
-	private Button mSendButton, mPlayButton,mResultButton;
+	private Button mTestButton, mPlayButton,mResultButton;
 
 	private TextView mWarningText;
 	// Name of the connected device
 	private String mConnectedDeviceName = null;
 	// Array adapter for the conversation thread
-	private ArrayAdapter<String> mConversationArrayAdapter;
+//	private ArrayAdapter<String> mConversationArrayAdapter;
 	// String buffer for outgoing messages
 	private StringBuffer mOutStringBuffer;
 	// Local Bluetooth adapter
@@ -119,12 +143,19 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	
 	GoogleMap mMap;
 	LocationManager locationManager ;
+	LocationListener locationListener;
 	static double myLong;
 	static double myLat;
+	
+	static GetHttp fight,fightView;
+	public static Handler handle_update,handle_parse;
+	Boolean flag_channel = false;
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+//		ACRA.init(this);
 		if (D)
 			Log.e(TAG, "+++ ON CREATE +++");
 
@@ -139,10 +170,55 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 				Crittercism.logHandledException(exception);
 			}
 		}
-		mMap = ((SupportMapFragment)getSupportFragmentManager()
-                .findFragmentById(R.id.mapgame)).getMap();
+		handle_update = new Handler();
 		
-		// Get local Bluetooth adapter
+		// The following line triggers the initialization of ACRA
+		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getBaseContext());
+		 
+        // Showing status
+        if(status!=ConnectionResult.SUCCESS){ // Google Play Services are not available
+ 
+            int requestCode = 10;
+            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(status, this, requestCode);
+            dialog.show();
+ 
+        }
+        else
+        {
+        	SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapgame);
+        	 
+            // Getting GoogleMap object from the fragment
+        	mMap = fm.getMap();        	
+        	locationListener = new MyLocationListener();
+        	
+            // Enabling MyLocation Layer of Google Map
+        	mMap.setMyLocationEnabled(true);
+        	mMap.getUiSettings().setAllGesturesEnabled(true);
+        	
+ 
+            // Getting LocationManager object from System Service LOCATION_SERVICE
+            locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+ 
+            // Creating a criteria object to retrieve provider
+            Criteria criteria = new Criteria();
+ 
+            // Getting the name of the best provider
+            String provider = locationManager.getBestProvider(criteria, true);
+ 
+            // Getting Current Location
+            Location loc = locationManager.getLastKnownLocation(provider);
+        
+            if(loc!=null){
+                locationListener.onLocationChanged(loc);
+                
+            }
+//            
+            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+//            locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);	
+        }
+		
+//		 Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
 		// If the adapter is null, then Bluetooth is not supported
@@ -153,17 +229,18 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			return;
 		}
 
-		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		
         
 	    // Register the listener with the Location Manager to receive location updates
-	    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);	    
+	        
 		mPlayButton = (Button) findViewById(R.id.button_play);
 		mPlayButton.setEnabled(true);
-		mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firewhite));
+		mPlayButton.setBackgroundColor(0xFFFFFFFF);
 		mPlayButton.setVisibility(View.VISIBLE);
 		
 		mResultButton = (Button)findViewById(R.id.button_result);
 		mResultButton.setVisibility(View.INVISIBLE);
+		
 		
 	}
 
@@ -186,6 +263,11 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 		}
 		
 		
+//		handle_update.postDelayed(updateStatus, 0);
+		
+//		fight.execute("http://54.255.184.201/api/v1/fight?target=2&_token="+LoginActivity.token);
+//		Log.d("post","get: http://54.255.184.201/api/v1/fight?target=2&_token="+LoginActivity.token);
+
 	}
 
 	@Override
@@ -236,7 +318,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 								Log.e(TAG,
 										"em da o day-----------------> bang chiu ----------------->");
 								
-								
+								locationManager.removeUpdates(locationListener);;
+//								handle_update.removeCallbacks(updateStatus);
 								finish();
 							}
 						})
@@ -267,17 +350,17 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 		Log.d(TAG, "setupChat()");
 
 		// Initialize the array adapter for the conversation thread
-		mConversationArrayAdapter = new ArrayAdapter<String>(this,
-				R.layout.message);
-		mConversationView = (ListView) findViewById(R.id.in);
-		mConversationView.setAdapter(mConversationArrayAdapter);
+//		mConversationArrayAdapter = new ArrayAdapter<String>(this,
+//				R.layout.message);
+//		
+//		mConversationView.setAdapter(mConversationArrayAdapter);
 
 		mPlayButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				mConversationArrayAdapter.clear();
+//				mConversationArrayAdapter.clear();
 				if (mChatService.getState() != BluetoothService.STATE_CONNECTED) {
 					Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT)
 							.show();
@@ -288,7 +371,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 					if(flag_play==0)
 					{
 
-						mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firewhite));
+//						mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firewhite));
+						mPlayButton.setBackgroundColor(0xFFFFFFFF);
 						mPlayButton.setText("PLAY");
 						if(flag_shoot==1)
 						{
@@ -296,6 +380,15 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			                sendMessage(message);
 			                flag_shoot = 0;
 			                flag_win = 1;
+			                
+			                GetHttp hit = new GetHttp();
+			                hit.execute("http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
+			                GetHttp.setOnPost(new OnPost(){
+			    				public void onpost(String result){
+			    					Log.d("result","result:"+result);
+			    				}
+			    			});
+//							Log.d("post","get: http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
 						}
 						
 						
@@ -303,7 +396,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 					}
 					else if(flag_play==1)
 					{
-						mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firered));
+//						mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firered));
+						mPlayButton.setBackgroundColor(0xFFFF0000);
 						mPlayButton.setText("SHOT");
 						flag_shoot = 1;
 						String message = "new session";
@@ -317,8 +411,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 			}
 		});
 		
-
-
 		// Initialize the BluetoothChatService to perform bluetooth connections
 		mChatService = new BluetoothService(this, mHandler);
 
@@ -442,7 +534,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 				case BluetoothService.STATE_CONNECTED:
 					setStatus(getString(R.string.title_connected_to,
 							mConnectedDeviceName));
-					mConversationArrayAdapter.clear();
+//					mConversationArrayAdapter.clear();
 					isConnected = true;
 					break;
 				case BluetoothService.STATE_CONNECTING:
@@ -461,10 +553,12 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 				break;
 			case MESSAGE_WRITE:
 				byte[] writeBuf = (byte[]) msg.obj;
-				 mConversationArrayAdapter.clear();
+//				 mConversationArrayAdapter.clear();
 				 if(flag_win==1)
 				 {
-	                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.win));
+//	                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.win));
+					mResultButton.setBackgroundColor(0x00FFFF00);
+					 mResultButton.setTextColor(Color.parseColor("#ff0000"));
 	                mResultButton.setVisibility(View.VISIBLE);
 	                mResultButton.setText("YOU WIN");
 	                flag_win = 0;
@@ -477,14 +571,25 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	                if(readMessage.equals("You die!") )
 	                {
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
-		                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.failure));
+//		                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.failure));
 		                mResultButton.setVisibility(View.VISIBLE);
 		                mResultButton.setText("YOU LOST");
+		                mResultButton.setTextColor(Color.parseColor("#0f1bb0"));
+		                mResultButton.setBackgroundColor(0x0000FFFF);
+		                
+		                mPlayButton.setBackgroundColor(0xFFFFFFFF);
+						mPlayButton.setText("PLAY");
+						flag_shoot = 0;
+						flag_play= 0;
 	                }
 	                if (readMessage.equals("new session") )
 	                {
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
 	                	mResultButton.setVisibility(View.INVISIBLE);
+	                	mPlayButton.setBackgroundColor(0x0000ff);
+						mPlayButton.setText("SHOT");
+						flag_shoot = 1;
+						flag_play= 1;
 	                }
 
 	                break;
@@ -578,14 +683,254 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 		return false;
 	}
 
-	@Override
-	public void onConnectionFailed(ConnectionResult arg0) {
-		// TODO Auto-generated method stub
+
+	
+	public class MyLocationListener implements LocationListener {
+		@Override
+		public void onLocationChanged(Location location) {
+			// TODO Auto-generated method stub
+			if (D)
+				Log.e(TAG, "-- ON Change Location --");
+//			UpdateStatusPlayer();
+			
+			LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+			myLong = location.getLongitude();
+			myLat = location.getLatitude();
+			
+			// (1)request get infor user
+			// (2)parse to get id -> long, lat -> convert string to double
+			// (3)assign long,lat to every object
+			// (4)display on map 
+			//=> create handler here -> parameter is function implement (1),(2),(3),(4). 
+			
+			Float acc = location.getAccuracy();
+		    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 14);
+	        BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
+	        BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+	        
+	        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
+	        if(GetHttp.flag_update==true)
+	        {
+	        	mMap.clear();
+	        	LatLng[] latLngArr = new LatLng[6];
+	        	for(int index=1;index<6;index++)
+	        	{
+	        		if(index!=LoginActivity.id)
+	        			latLngArr[index]= new LatLng(Double.parseDouble(GetHttp._Lat[index]),Double.parseDouble(GetHttp._Long[index]));
+	        	}
+//		        LatLng latLng1 = new LatLng(Double.parseDouble(GetHttp._Lat[1]),Double.parseDouble(GetHttp._Long[1]));
+//				LatLng latLng2 = new LatLng(Double.parseDouble(GetHttp._Lat[2]),Double.parseDouble(GetHttp._Long[2]));
+//				LatLng latLng3 = new LatLng(Double.parseDouble(GetHttp._Lat[3]),Double.parseDouble(GetHttp._Long[3]));
+//				LatLng latLng4 = new LatLng(Double.parseDouble(GetHttp._Lat[4]),Double.parseDouble(GetHttp._Long[4]));
+		        // true: free
+		        // false: not free
+				for(int index=1;index<6;index++)
+				{
+					if(index!=LoginActivity.id)
+					{
+						if(GetHttp._stage[index]==GetHttp.FREE)
+				        {
+				        			        	
+					        mMap.addMarker(new MarkerOptions()
+					        .position(latLngArr[index])
+					        .icon(bitmapDesFree)
+					        .title("player"+index)).showInfoWindow();
+				        }
+				        else
+				        {
+				        	mMap.addMarker(new MarkerOptions()
+					        .position(latLngArr[index])
+					        .icon(bitmapDesNotFree)
+					        .title("player"+index)).showInfoWindow();
+				        }
+					}
+				}
+
+		        GetHttp.flag_update = false;
+		        Log.d("update", "+ update completed");
+		        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
+	        }
+        	
+	        mMap.animateCamera(cameraUpdate);
+	        
+	        if(flag_channel==false)
+	        {
+		        Log.e("update", "+ Flag getpost:"+LoginActivity.flag_getpost);
+		        if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
+		        {
+		        	LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
+		        	Log.e("http", "+ HTTP POST ME BUZY +");
+			        PostHttp.casepost = PostHttp.TRACKING;
+					new PostHttp().execute("http://54.255.184.201/api/v1/tracking?_token="+LoginActivity.token);
+					flag_channel = true;
+			        Log.d("update","channel:"+flag_channel);
+				}
+		        
+	        }
+	        else
+	        {
+		        if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
+	    		{
+	        		Log.e("update", "+ UPDATE 2 +");
+	        		Log.d("update", "+ Flag update:"+ GetHttp.flag_update);
+	    			LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
+	    			UpdateStatusPlayer();
+	    			flag_channel = false;
+	    		}
+		        
+	        }
+
+		}
+
+		@Override
+		public void onProviderDisabled(String provider) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onProviderEnabled(String provider) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void onStatusChanged(String provider, int status, Bundle extras) {
+			// TODO Auto-generated method stub
+			
+		}
+	}
+	
+	Runnable updateStatus= new Runnable(){
+        public void run(){
+             //call the service here
+        	Log.e("update", "+ UPDATE +");
+        	Log.e("update", "+ Flag getpost:"+LoginActivity.flag_getpost);
+        	if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
+    		{
+        		Log.e("update", "+ UPDATE 2 +");
+        		Log.d("update", "+ Flag update:"+ GetHttp.flag_update);
+    			LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
+    			
+    			UpdateStatusPlayer();
+    		}
+        		handle_update.postDelayed(this,10000);
+        }
+   };
+	public static void UpdateStatusPlayer()
+	{		
+		if(GetHttp.flag_update==false)
+		{
+			Log.e("http", "+ HTTP UPDATE BUZY +");			
+			GetHttp.caseget = GetHttp.UPDATE;			
+			GetHttp statusPlayer = new GetHttp();
+			statusPlayer.execute("http://54.255.184.201/api/v1/users?_token="+LoginActivity.token);
+			Log.d("post","get: http://54.255.184.201/api/v1/users?_token="+LoginActivity.token);
+			GetHttp.setOnPost(new OnPost(){
+				public void onpost(String result){
+					String lat = "latitude";
+					String log = "longitude";
+					String stage ="stage";
+					int index = result.indexOf(lat);
+					int i=1;
+					
+					while(index != -1) {
+						Log.e("status", "++ STATUS ++");
+						GetHttp.LatIndex[i]=index;
+					    Log.d("status","\n Lat index"+i+":"+index);
+					    index = result.indexOf(lat, index + 1);
+					    
+					    i++;
+					}
+					index = result.indexOf(log);
+					i=1;
+					while(index != -1) {
+						Log.e("status", "++ STATUS ++");
+						GetHttp.LogIndex[i]=index;
+					    Log.d("status","\n Log index"+i+":"+index);
+					    index = result.indexOf(log, index + 1);
+					    i++;
+					}
+					index = result.indexOf(stage);
+					i=1;
+					while(index != -1) {
+						Log.e("status", "++ STATUS ++");
+						GetHttp.StageIndex[i]=index;
+					    Log.d("status","\n stage index"+i+":"+index);
+					    index = result.indexOf(stage, index + 1);			    
+					    i++;
+					}
+					
+					if(GetHttp.LatIndex[1]!=-1)
+					{
+						for(i=1;i<6;i++)
+						{
+							if(i!= LoginActivity.id)
+							{
+								index=result.indexOf("\"",GetHttp.LatIndex[i]+11);
+								Log.d("status","\n Lat index"+i+":"+result.substring(GetHttp.LatIndex[i]+11,index));
+								GetHttp._Lat[i]=result.substring(GetHttp.LatIndex[i]+11,index);
+								Log.d("post", "Lat: player"+i+":"+GetHttp._Lat[i]);
+							}
+						}
+						
+					}
+					if(GetHttp.LogIndex[1]!=-1)
+					{
+						for(i=1;i<6;i++)
+						{
+							index=result.indexOf("\"",GetHttp.LogIndex[i]+12);
+							Log.d("status","\n Lat index"+i+":"+result.substring(GetHttp.LogIndex[i]+12,index));
+							GetHttp._Long[i]=result.substring(GetHttp.LogIndex[i]+12,index);
+							Log.d("post", "Lat: player"+i+":"+GetHttp._Long[i]);
+						}
+						
+					}
+					if(GetHttp.StageIndex[1]!=-1)
+					{
+						for(i=1;i<6;i++)
+						{
+							if(i!=LoginActivity.id)
+							{
+								Log.d("status","\n stage index"+i+":"+result.substring(GetHttp.StageIndex[i]+8,GetHttp.StageIndex[i]+12));
+								if(result.substring(GetHttp.StageIndex[i]+8,GetHttp.StageIndex[i]+12).equals("free"))
+								{
+									GetHttp._stage[i] = GetHttp.FREE;
+									
+								}
+								else
+								{
+									GetHttp._stage[i]=GetHttp.NOT_FREE;
+								}
+								Log.d("post", "Stage: player"+i+":"+GetHttp._stage[i]);
+							}
+						}
+						
+								
+					}
+					GetHttp.flag_update = true;
+					LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+					Log.e("http", "+ HTTP UPDATE FREE +");
+				}
+			});
+			
+		}
+//		else
+//			LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+			
 		
 	}
 
 	@Override
-	public void onConnected(Bundle connectionHint) {
+	public void onConnectionFailed(ConnectionResult arg0) {
+		// TODO Auto-generated method stub
+//		Toast.makeText(this, "Please connect to Goolge Play Service", Toast.LENGTH_SHORT).show();
+	}
+	
+	
+
+	@Override
+	public void onConnected(Bundle arg0) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -596,76 +941,6 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 		
 	}
 
-	@Override
-	public void onLocationChanged(Location location) {
-		// TODO Auto-generated method stub
-		if (D)
-			Log.e(TAG, "-- ON Change Location --");
-		LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-//		mylocation.setLongitude(location.getLongitude());
-//		mylocation.setLatitude(location.getLatitude());
-		myLong = location.getLongitude();
-		myLat = location.getLatitude();
-		
-		// (1)request get infor user
-		// (2)parse to get id -> long, lat -> convert string to double
-		// (3)assign long,lat to every object
-		// (4)display on map 
-		//=> create handler here -> parameter is function implement (1),(2),(3),(4). 
-		
-		LatLng latLng1 = new LatLng(location.getLatitude() - 0.00647, location.getLongitude() + 0.00494);
-		LatLng latLng2 = new LatLng(location.getLatitude() + 0.00422, location.getLongitude() + 0.00773);
-		LatLng latLng3 = new LatLng(location.getLatitude() + 0.00422, location.getLongitude() - 0.00772);
-		LatLng latLng4 = new LatLng(location.getLatitude() - 0.00864, location.getLongitude() - 0.00386);
-		
-		Float acc = location.getAccuracy();
-		
-        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 14);
-        
-        mMap.clear();
-        
-        mMap.addMarker(new MarkerOptions()
-        .position(latLng));
-        
-        BitmapDescriptor bitmapDescriptor = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
-        
-        mMap.addMarker(new MarkerOptions()
-        .position(latLng1)
-        .icon(bitmapDescriptor));
-        
-        mMap.addMarker(new MarkerOptions()
-        .position(latLng2)
-        .icon(bitmapDescriptor));
-        
-        mMap.addMarker(new MarkerOptions()
-        .position(latLng3)
-        .icon(bitmapDescriptor));
-        
-        mMap.addMarker(new MarkerOptions()
-        .position(latLng4)
-        .icon(bitmapDescriptor));
-       
-        mMap.animateCamera(cameraUpdate);
-        
-        PostHttp.casepost = PostHttp.TRACKING;
-		new PostHttp().execute("");
-	}
-
-	@Override
-	public void onProviderDisabled(String arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onProviderEnabled(String arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
-		// TODO Auto-generated method stub
-		
-	}
+	
+	
 }

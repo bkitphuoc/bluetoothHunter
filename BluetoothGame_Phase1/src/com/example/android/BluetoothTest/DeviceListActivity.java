@@ -2,7 +2,7 @@ package com.example.android.BluetoothTest;
 
 import java.util.Set;
 
-import com.example.android.BluetoothChat.R;
+import com.example.android.BluetoothTest.R;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;

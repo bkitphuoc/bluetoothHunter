@@ -28,7 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crittercism.app.Crittercism;
-import com.example.android.BluetoothChat.R;
+import com.example.android.BluetoothTest.R;
  
 public class LoginActivity extends Activity {
 	

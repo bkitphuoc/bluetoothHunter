@@ -124,7 +124,7 @@ public class BluetoothService {
         if (mConnectedThread != null) {mConnectedThread.cancel(); mConnectedThread = null;}
 
         setState(STATE_LISTEN);
-
+        Log.e("socket","Listen");
         // Start the thread to listen on a BluetoothServerSocket
         if (mSecureAcceptThread == null) {
             mSecureAcceptThread = new AcceptThread(true);
@@ -161,6 +161,7 @@ public class BluetoothService {
         if(!mConnectThread.isAlive() || mConnectThread == null)
         	mConnectThread.start();
         setState(STATE_CONNECTING);
+        Log.e("socket","Connecting");
     }
 
     /**
@@ -201,6 +202,7 @@ public class BluetoothService {
         mHandler.sendMessage(msg);
 
         setState(STATE_CONNECTED);
+        Log.e("socket","Connected");
     }
 
     /**
@@ -321,6 +323,7 @@ public class BluetoothService {
 //                        MY_UUID_SECURE);
                     tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(
                           NAME_INSECURE, MY_UUID_INSECURE);
+	                  
                 } 
 //                else {
 //                    tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(
@@ -444,6 +447,7 @@ public class BluetoothService {
             			if(seconds == 5)
             				break;
             		}
+            		Log.e("socket","Thread Connecting");
             	}
             	catch(IOException e){
             		

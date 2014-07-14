@@ -24,11 +24,14 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 	static int LOGIN=1;
 	static int TRACKING=2;
 	static int casepost;
-	static String result = "";
+	static String resultPost = "";
+	static String result1 = "";
 	static int flag_stop_readResponce=0;
 	static int flag_login_succ = 0;
+	static Boolean flag_resp = false;
 	    @Override
 	    protected String doInBackground(String... urls) {
+	    	result1="";
 	    	if(casepost==LOGIN)
 	    		urls[0]="http://54.255.184.201/api/v1/auth/login";
 	    	else if(casepost==TRACKING)
@@ -40,6 +43,13 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 	    @Override
 	    protected void onPostExecute(String result) {
 	//        Toast.makeText(getBaseContext(), "Login Server!", Toast.LENGTH_LONG).show();
+	    	
+	    	result1 = result;
+	    	LoginActivity.flag_getpost = LoginActivity.HTTP_FREE;
+	    	Log.e("http", "+ HTTP POST FREE +");
+	    	Log.d("post", "longitude="+Double.toString(BluetoothTest.myLong) +
+	        		",latitude="+Double.toString(BluetoothTest.myLat) +",limit:5");
+	    	
 	   }
 	
 	
@@ -59,9 +69,9 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 	        JSONObject jsonObject = new JSONObject();
 	        if(casepost==LOGIN)
 	        {
-//		        jsonObject.put("email",LoginActivity.etemail.getText().toString());
+		        jsonObject.put("email",LoginActivity.etemail.getText().toString()+"@domain.com");
 //		        jsonObject.put("password",LoginActivity.etpass.getText().toString());
-	        	jsonObject.put("email","user_2@domain.com");
+//	        	jsonObject.put("email","user_1@domain.com");
 		        jsonObject.put("password","abc123");
 		        Log.d("post", "email="+LoginActivity.etemail.getText().toString() + ", pass=" + LoginActivity.etpass.getText().toString());
 	        }
@@ -101,12 +111,12 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 				}
 	
 				// convert content stream to a String
-				 result= convertInputStreamToString(instream);
+				 resultPost= convertInputStreamToString(instream);
 				instream.close();
-				result = result.substring(1,result.length()-1); // remove wrapping "[" and "]"
+				resultPost = resultPost.substring(1,resultPost.length()-1); // remove wrapping "[" and "]"
 			} 
 	        else
-	        	result = "Did not work!";
+	        	resultPost = "Did not work!";
 	        
 	//        handle_reponse.postDelayed(new readResponse(), 0);  
 	//        Log.d("post", "result:"+result);
@@ -114,9 +124,9 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 	        Log.d("post", e.getLocalizedMessage());
 	        Log.d("post", "cannot post");
 	    }
-	
+	    LoginActivity.flag_getpost = LoginActivity.HTTP_FREE;
 	    // 10. return result
-	    return result;
+	    return resultPost;
 	}
 	
 	private static String convertInputStreamToString(InputStream inputStream) throws IOException{
@@ -131,47 +141,5 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 	
 	}  
 	
-//	public class readResponse implements Runnable {
-//	    public void run(){
-//	         //call the service here
-//	//    	checkResponse();
-//	    	if(flag_stop_readResponce<6)
-//	    		flag_stop_readResponce++;
-//	    	Log.d("post", "result:"+result);
-//	//		   tvrespond.setText("response:"+result);
-//	    	if(!result.equals(""))
-//	    	{
-//	 		   int index = result.indexOf("token");
-//	 		   if(index!=-1)
-//	 		   {
-//	 			   Log.d("post", "indexOf:"+index);
-//	 			   token = result.substring(index+8,index+28);
-//	 			   Log.d("post", "token:"+token);
-//	 			   flag_login_succ = 1;
-//	 			  Toast.makeText(getBaseContext(), "Login Success!", Toast.LENGTH_LONG).show();
-//	 			  result="";
-//	 			 flag_stop_readResponce=0;
-//	 			  startActivity(new Intent(LoginActivity.this,JoinGameActivity.class));
-//	 			 
-//	 		   }
-//	 		   else
-//	 		   {
-//	// 			   if(flag_stop_readResponce>5)
-//	 			   {
-//	 				   Toast.makeText(getBaseContext(), "Error Account!", Toast.LENGTH_LONG).show();
-//	 				   flag_stop_readResponce=0;
-//	 				   handle_reponse.removeCallbacks(this);
-//	 			   }
-//	 			  
-//	 		   }
-//	    	}
-//	    	else
-//	    		handle_reponse.postDelayed(this, 100);
-//			  if(flag_login_succ==1)
-//			  {
-//				  handle_reponse.removeCallbacks(this);
-//			  }
-//	         
-//	    }
-//	};
+
 }

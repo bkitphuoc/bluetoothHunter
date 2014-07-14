@@ -14,24 +14,28 @@
      limitations under the License.
 -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  
+    
+<RelativeLayout  xmlns:android="http://schemas.android.com/apk/res/android"
   
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    
     <fragment 
           android:id="@+id/mapgame"
           android:layout_width="match_parent"
-          android:layout_height="400dip"
+          android:layout_height="match_parent"
           android:name="com.google.android.gms.maps.SupportMapFragment" />
+		
      <LinearLayout
         android:orientation="horizontal"
-        android:layout_width="match_parent"
+        android:layout_centerHorizontal="true"
+		android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-		android:gravity="center"
-		
+		android:gravity="center"		
         android:layout_marginTop="100dip">
+        
 		<Button android:id="@+id/button_result"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -42,13 +46,7 @@
 		 
     </LinearLayout>
      
-    <ListView android:id="@+id/in"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll"
-        android:layout_weight="1"
-    />
+   
     <LinearLayout
         android:layout_alignParentBottom="true"
         android:orientation="horizontal"
@@ -57,12 +55,7 @@
 		 android:gravity="center" 
        
         >
-        <!-- <EditText android:id="@+id/edit_text_out"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_gravity="bottom"
-        /> -->
+       
         <Button android:id="@+id/button_play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -70,13 +63,27 @@
             android:textSize="30dip"
            android:textColor="#0f1bb0"
             />
-       <!--  <Button android:id="@+id/button_send"
+       
+    </LinearLayout>
+   <!-- <LinearLayout
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+		 android:gravity="center" 
+       
+        >
+       
+        <Button android:id="@+id/button_testServer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/send"
-        /> -->
-    </LinearLayout>
-   
+            android:text="@string/test"
+            android:textSize="30dip"
+           android:textColor="#0f1bb0"
+            />
+       
+    </LinearLayout> -->
     
    
 </RelativeLayout>
+

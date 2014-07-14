@@ -1,6 +1,6 @@
 package com.example.android.BluetoothTest;
 
-import com.example.android.BluetoothChat.R;
+import com.example.android.BluetoothTest.R;
 
 import android.app.Activity;
 import android.os.Bundle;

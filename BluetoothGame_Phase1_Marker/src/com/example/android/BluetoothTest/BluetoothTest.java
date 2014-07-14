@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import com.crittercism.app.Crittercism;
-import com.example.android.BluetoothChat.R;
+import com.example.android.BluetoothTest.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.maps.CameraUpdate;

@@ -5,14 +5,12 @@
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="lib" path="E:/BUI DUC THINH DATA/ANDROID/DEVELOPMENT/adt-bundle-windows-x86_64-20140321/sdk/platforms/android-19/android.jar">
+	<classpathentry kind="lib" path="D:/Software/Project/Android/Game_BlueTooth/Source/BluetoothTestv6/libs/crittercism_v4_5_1_sdkonly.jar"/>
+	<classpathentry kind="lib" path="D:/Software/Project/Android/Game_BlueTooth/Source/BluetoothTestv6/libs/android-support-v4.jar"/>
+	<classpathentry exported="true" kind="lib" path="D:/Software/Doc/Android/adt-bundle-windows-x86-2014032/sdk/extras/google/google_play_services_froyo/libproject/google-play-services_lib/libs/google-play-services.jar">
 		<attributes>
-			<attribute name="javadoc_location" value="http://developer.android.com/reference/"/>
+			<attribute name="javadoc_location" value="file:/D:/Software/Doc/Android/adt-bundle-windows-x86-2014032/sdk/extras/google/google_play_services_froyo/libproject/google-play-services_lib/libs/../../../docs/reference/"/>
 		</attributes>
-		<accessrules>
-			<accessrule kind="nonaccessible" pattern="com/android/internal/**"/>
-		</accessrules>
 	</classpathentry>
-	<classpathentry kind="lib" path="E:/BUI DUC THINH DATA/ANDROID/DEVELOPMENT/Bluetooth/BluetoothGame_Phase1_Marker/libs/crittercism_v4_5_1_sdkonly.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

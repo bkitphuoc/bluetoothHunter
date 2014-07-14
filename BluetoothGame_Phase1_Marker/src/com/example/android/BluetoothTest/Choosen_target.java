@@ -83,10 +83,10 @@ public class Choosen_target extends Activity implements LocationListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(com.example.android.BluetoothChat.R.layout.choosen_target_map);
+		setContentView(com.example.android.BluetoothTest.R.layout.choosen_target_map);
 
 		map = ((MapFragment) getFragmentManager().findFragmentById(
-				com.example.android.BluetoothChat.R.id.map)).getMap();
+				com.example.android.BluetoothTest.R.id.map)).getMap();
 
 		//
 		locationManager = (LocationManager) this
@@ -114,32 +114,32 @@ public class Choosen_target extends Activity implements LocationListener {
 		m1 = map.addMarker(new MarkerOptions()
 				.position(latLng)
 				.icon(BitmapDescriptorFactory
-						.fromResource(com.example.android.BluetoothChat.R.drawable.marker2))
+						.fromResource(com.example.android.BluetoothTest.R.drawable.marker2))
 				.title("Hunter location"));
 		m1.showInfoWindow();
 
 		m2 = map.addMarker(new MarkerOptions()
 				.position(latLng1)
 				.icon(BitmapDescriptorFactory
-						.fromResource(com.example.android.BluetoothChat.R.drawable.marker))
+						.fromResource(com.example.android.BluetoothTest.R.drawable.marker))
 				.title("Target location"));
 
 		m3 = map.addMarker(new MarkerOptions()
 				.position(latLng2)
 				.icon(BitmapDescriptorFactory
-						.fromResource(com.example.android.BluetoothChat.R.drawable.marker))
+						.fromResource(com.example.android.BluetoothTest.R.drawable.marker))
 				.title("Target location"));
 
 		m4 = map.addMarker(new MarkerOptions()
 				.position(latLng3)
 				.icon(BitmapDescriptorFactory
-						.fromResource(com.example.android.BluetoothChat.R.drawable.marker))
+						.fromResource(com.example.android.BluetoothTest.R.drawable.marker))
 				.title("Target location"));
 
 		m5 = map.addMarker(new MarkerOptions()
 				.position(latLng4)
 				.icon(BitmapDescriptorFactory
-						.fromResource(com.example.android.BluetoothChat.R.drawable.marker))
+						.fromResource(com.example.android.BluetoothTest.R.drawable.marker))
 				.title("Target location"));
 		map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
 		map.animateCamera(CameraUpdateFactory.zoomTo(14), 2000, null);

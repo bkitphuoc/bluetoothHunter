@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.zip.GZIPInputStream;
 
+import org.acra.ReportField;
+import org.acra.ReportingInteractionMode;
+import org.acra.annotation.ReportsCrashes;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -28,16 +31,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crittercism.app.Crittercism;
-import com.example.android.BluetoothChat.R;
- 
+import com.example.android.BluetoothTest.R;
+
+
 public class LoginActivity extends Activity {
 	
 	public static int flag_debug = 0;
 	public static String token="";
+	public static int id=0;
 	String resultLogin = "";
 	static int flag_stop_readResponce=0;
 	static int flag_login_succ = 0;
 	Handler handle_reponse;
+	static Boolean HTTP_FREE = false;
+	static Boolean HTTP_BUZY = true;
+	
+	static Boolean flag_getpost = HTTP_FREE;
 	
 	static EditText etemail;
 	static EditText etpass;
@@ -45,7 +54,9 @@ public class LoginActivity extends Activity {
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	
         super.onCreate(savedInstanceState);
+        
         // setting default screen to login.xml
         setContentView(R.layout.login);
  
@@ -70,8 +81,10 @@ public class LoginActivity extends Activity {
  
             public void onClick(View v) {
                 // Switching to Register screen
-                Intent i = new Intent(getApplicationContext(), RegisterActivity.class);
-                startActivity(i);
+//                Intent i = new Intent(getApplicationContext(), RegisterActivity.class);
+//                startActivity(i);
+            	GetHttp test = new GetHttp();
+            	test.execute("http://54.255.184.201/api/v1/users?_token=IK5M5IL1MO5AhGMQmX4d");
             }
         });
         
@@ -85,61 +98,89 @@ public class LoginActivity extends Activity {
 //				result ="";
 
 				// TODO Auto-generated method stub
-				Intent choosenTarget_t = new Intent(getApplicationContext(), JoinGameActivity.class);
-				startActivity(choosenTarget_t);
+//				Intent choosenTarget_t = new Intent(getApplicationContext(), JoinGameActivity.class);
+//				startActivity(choosenTarget_t);
 				
-//				handle_reponse = new Handler();
-//				PostHttp.casepost = PostHttp.LOGIN;
-//				new PostHttp().execute("");
-//				handle_reponse.postDelayed(new readResponse(), 0);  
+				handle_reponse = new Handler();
+				
+				if(flag_getpost==HTTP_FREE)
+				{
+//					GetHttp.client.getConnectionManager().shutdown();
+					flag_getpost = HTTP_BUZY;
+					Log.e("http", "+ HTTP BUZY +");
+					flag_login_succ = 0;
+					PostHttp.casepost = PostHttp.LOGIN;
+					new PostHttp().execute("");
+					handle_reponse.postDelayed(new readResponseLogin(), 0);
+				}
                 
 			}
 		});
     }
     
 
-    public class readResponse implements Runnable {
+    public class readResponseLogin implements Runnable {
         public void run(){
              //call the service here
 //        	checkResponse();
-        	resultLogin = PostHttp.result;
-        	if(flag_stop_readResponce<6)
-        		flag_stop_readResponce++;
-        	Log.d("post", "result:"+resultLogin);
-// 		   tvrespond.setText("response:"+result);
-        	if(!resultLogin.equals(""))
+        	if(flag_getpost == HTTP_FREE)
         	{
-	 		   int index = resultLogin.indexOf("token");
-	 		   if(index!=-1)
-	 		   {
-	 			   Log.d("post", "indexOf:"+index);
-	 			   token = resultLogin.substring(index+8,index+28);
-	 			   Log.d("post", "token:"+token);
-	 			   flag_login_succ = 1;
-	 			  Toast.makeText(getBaseContext(), "Login Success!", Toast.LENGTH_LONG).show();
-	 			 resultLogin="";
-	 			 flag_stop_readResponce=0;
-	 			  startActivity(new Intent(LoginActivity.this,JoinGameActivity.class));
-	 			 
-	 		   }
-	 		   else
-	 		   {
-	// 			   if(flag_stop_readResponce>5)
-	 			   {
-	 				   Toast.makeText(getBaseContext(), "Error Account!", Toast.LENGTH_LONG).show();
-	 				   flag_stop_readResponce=0;
-	 				   handle_reponse.removeCallbacks(this);
-	 			   }
-	 			  
-	 		   }
+	        	resultLogin = PostHttp.resultPost;
+	//        	if(flag_stop_readResponce<6)
+	        		flag_stop_readResponce++;
+	        	Log.d("post", "Login result:"+resultLogin);
+	// 		   tvrespond.setText("response:"+result);
+	        	if(!resultLogin.equals(""))
+	        	{
+		 		   int index = resultLogin.indexOf("token");
+		 		   if(index!=-1)
+		 		   {
+		 			   Log.d("post", "indexOf token:"+index);
+		 			   token = resultLogin.substring(index+8,index+28);
+		 			   Log.d("post", "token:"+token);
+		 			   
+		 			   int indexId = resultLogin.indexOf("id");
+		 			   if(index!=-1)
+		 			   {
+		 				   Log.d("post","indexOf id:"+indexId);
+		 				   int indexEnd=resultLogin.indexOf("\"",indexId+5);
+		 				   id = Integer.parseInt(resultLogin.substring(indexId+5,indexEnd));
+		 				   Log.d("post", "id:"+id);
+		 			   }
+		 			   flag_login_succ = 1;
+		 			  Toast.makeText(getBaseContext(), "Login Success!", Toast.LENGTH_LONG).show();
+		 			 resultLogin="";
+		 			 flag_stop_readResponce=0;
+		 			  startActivity(new Intent(LoginActivity.this,JoinGameActivity.class));
+		 			 
+		 		   }
+		 		   else
+		 		   {
+		 			   if(flag_stop_readResponce>8)
+		 			   {
+		 				   Toast.makeText(getBaseContext(), "Error Account!", Toast.LENGTH_LONG).show();
+		 				   flag_stop_readResponce=0;
+		 				   handle_reponse.removeCallbacks(this);
+		 				  flag_getpost = HTTP_FREE;
+		 			   }
+		 			  
+		 		   }
+	        	}
+	        	else
+	        		handle_reponse.postDelayed(this, 100);
+	 		  if(flag_login_succ==1)
+	 		  {
+	 			  handle_reponse.removeCallbacks(this);
+	 			  flag_getpost = HTTP_FREE;
+	 		  }
+	             
+	        }
+        	else if((flag_getpost == HTTP_BUZY) && (flag_login_succ!=1))
+        	{
+        		handle_reponse.postDelayed(this, 100);
         	}
         	else
-        		handle_reponse.postDelayed(this, 100);
- 		  if(flag_login_succ==1)
- 		  {
- 			  handle_reponse.removeCallbacks(this);
- 		  }
-             
+        		handle_reponse.removeCallbacks(this);
         }
    };
 }

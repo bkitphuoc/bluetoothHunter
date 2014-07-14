@@ -56,7 +56,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crittercism.app.Crittercism;
-import com.example.android.BluetoothChat.R;
+import com.example.android.BluetoothTest.R;
 import com.example.android.BluetoothTest.LoginActivity.readResponse;
 import com.google.android.gms.plus.model.people.Person;
 

@@ -45,7 +45,7 @@
 	        
 		         
 		</LinearLayout>
-		<LinearLayout
+	<!-- 	<LinearLayout
 		    android:layout_below="@+id/req"
 		    android:orientation="horizontal"
 		    android:layout_width="300dp"
@@ -59,7 +59,7 @@
 	        android:layout_width="300dp"
 	        android:layout_weight="1.0" />
 		         
-		</LinearLayout>
+		</LinearLayout -->>
        <!--  Login Form Ends -->
 
     </RelativeLayout>

@@ -20,7 +20,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="User"
-                android:textColor="#372c24" />
+                android:textColor="#ffffff" />
             <EditText
                 android:id="@+id/UserText"
                 android:layout_width="fill_parent"
@@ -36,7 +36,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:text="Password"
-                android:textColor="#372c24" />
+                android:textColor="#ffffff" />
 
             <EditText
                 android:id="@+id/PassText"
