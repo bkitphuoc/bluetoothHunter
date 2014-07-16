@@ -28,6 +28,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -146,6 +147,8 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 	LocationListener locationListener;
 	static double myLong;
 	static double myLat;
+	Marker Target;
+	String address = "";
 	
 	static GetHttp fight,fightView;
 	public static Handler handle_update,handle_parse;
@@ -208,9 +211,32 @@ GooglePlayServicesClient.OnConnectionFailedListener{
             // Getting Current Location
             Location loc = locationManager.getLastKnownLocation(provider);
         
+            
             if(loc!=null){
                 locationListener.onLocationChanged(loc);
+                LatLng latLng = new LatLng(loc.getLatitude() - 0.00647,
+        				loc.getLongitude());
+                Target = mMap.addMarker(new MarkerOptions()
+				.position(latLng)
+				.icon(BitmapDescriptorFactory
+						.fromResource(R.drawable.marker2))
+				.title("Target location"));
                 
+                mMap.setOnMarkerClickListener(new OnMarkerClickListener() {
+					
+					@Override
+					public boolean onMarkerClick(Marker marker) {
+						// TODO Auto-generated method stub
+						if(marker.equals(Target)){
+							address = "90:C1:15:26:D8:38";
+							// Get the BluetoothDevice object
+							BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+							// Attempt to connect to the device
+							mChatService.connect(device, true);
+						}
+						return false;
+					}
+				});
             }
 //            
             locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
