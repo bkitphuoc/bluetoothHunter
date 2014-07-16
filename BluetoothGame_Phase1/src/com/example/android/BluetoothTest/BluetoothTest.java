@@ -422,7 +422,7 @@ GooglePlayServicesClient.OnConnectionFailedListener{
 					}
 					else if(flag_play==1)
 					{
-//						mPlayButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.firered));
+
 						mPlayButton.setBackgroundColor(0xFFFF0000);
 						mPlayButton.setText("SHOT");
 						flag_shoot = 1;
