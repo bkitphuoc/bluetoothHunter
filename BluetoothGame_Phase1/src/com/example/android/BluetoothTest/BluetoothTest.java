@@ -155,6 +155,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	public static Handler handle_update,handle_parse;
 	Boolean flag_channel = false;
 
+	TextView distanceText[] = new TextView[4];
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -165,6 +166,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 
 		// Set up the window layout
 		setContentView(R.layout.main);
+		distanceText[0] = (TextView) findViewById(R.id.distance_1);
+		distanceText[1] = (TextView) findViewById(R.id.distance_2);
+		distanceText[2] = (TextView) findViewById(R.id.distance_3);
+		distanceText[3] = (TextView) findViewById(R.id.distance_4);
 		if(LoginActivity.flag_debug==1)
 		{
 			Crittercism.initialize(getApplicationContext(),"53b3bb7b07229a5a86000006");
@@ -756,6 +761,13 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			myLong = location.getLongitude();
 			myLat = location.getLatitude();
 			
+			Location locationA = new Location("point A");
+			locationA.setLongitude(myLong);
+			locationA.setLatitude(myLat);
+			
+			Location locationB = new Location("point B");
+			float distance[] = new float[4];
+			
 			// (1)request get infor user
 			// (2)parse to get id -> long, lat -> convert string to double
 			// (3)assign long,lat to every object
@@ -783,6 +795,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	        	
 				for(int index=1;index<6;index++)
 				{
+					int j = 0;
 					
 					if(index!=LoginActivity.id)
 					{
@@ -795,7 +808,14 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 					        .icon(bitmapDesFree)
 					        .title("player"+index));
 					        MarkerArr[index].showInfoWindow();
-			        
+					        
+					        locationB.setLatitude(latLngArr[index].latitude);
+					        locationB.setLongitude(latLngArr[index].longitude);
+					        Log.e("MyLocation",myLong + "    " + myLat);
+					        Log.e("OtherLocation",latLngArr[index].latitude + "    " + latLngArr[index].longitude);
+					        distance[j] = locationA.distanceTo(locationB); 
+					        distanceText[j].setText(String.valueOf(distance[j]));
+					        j++;
 
 				        }
 				        else
@@ -809,6 +829,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 
 				        }
 					}
+					
 				}
 
 		        GetHttp.flag_update = false;
@@ -1056,9 +1077,5 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	
 		return true;
 	}
-	
-	
-
-	
 	
 }
