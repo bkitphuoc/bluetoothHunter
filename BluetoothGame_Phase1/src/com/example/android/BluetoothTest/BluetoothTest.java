@@ -386,7 +386,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
     }
 	private void setupChat() {
 		Log.d(TAG, "setupChat()");
-		handle_shooting.post(updateStateButton);
+//		handle_shooting.post(updateStateButton);
 		mPlayButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -430,6 +430,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 							                targetId = 0;
 							                GetHttp.choseTarget=false;
 							                mPlayButton.setText("Reset");
+							                handle_shooting.removeCallbacks(updateStateButton);
+							                mChatService.stop();
 //							                sendMessage("I pess back");
 				    					}
 				    				}
@@ -512,12 +514,12 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			Log.e("update", "- Update state button -");
 			Log.e("update", "targetId"+ targetId);
 			Log.e("update", "state bluetooth"+mChatService.getState());
-			if ((mChatService.getState() != BluetoothService.STATE_CONNECTED) || (targetId ==0)) {
+			if ((mChatService.getState() != BluetoothService.STATE_CONNECTED)) {
 				mPlayButton.setBackgroundColor(0xFFFFFFFF);
 				flag_play = 1;
 				flag_checkTarget = 0;
 			}
-			else if((mChatService.getState() == BluetoothService.STATE_CONNECTED) && (targetId>0))
+			else if((mChatService.getState() == BluetoothService.STATE_CONNECTED))
 			{
 				flag_checkTarget++;	
 			}
@@ -1225,6 +1227,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 										device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
 										mChatService.connect(device, true);
 										Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show();
+										handle_shooting.post(updateStateButton);
 									}
 								}
 							});
