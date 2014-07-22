@@ -119,10 +119,6 @@ public class JoinGameActivity extends Activity {
 			@Override
 			public void onClick(View arg0) {
            // call AsynTask to perform network operation on separate thread
-//				logout.execute("http://54.255.184.201/api/v1/auth/logout?_token="+LoginActivity.token);
-//				Log.d("post","get: http://54.255.184.201/api/v1/auth/logout?_token="+LoginActivity.token);
-//				
-//				handle_reponse.postDelayed(new readResponse(), 0);
 				AlertDialog.Builder builder = new AlertDialog.Builder(JoinGameActivity.this);
 				builder.setMessage("Are you sure you want to Sign Out?")
 						.setCancelable(false)
@@ -158,9 +154,8 @@ public class JoinGameActivity extends Activity {
 										        Log.e("http", "+ HTTP FREE LOGOUT+");
 											}
 										});
-//										handle_reponse.postDelayed(new readResponse(), 0); 
-										startActivity(new Intent(JoinGameActivity.this,
-												LoginActivity.class));
+//										startActivity(new Intent(JoinGameActivity.this,
+//												LoginActivity.class));
 										finish();
 									}
 								})
@@ -221,9 +216,8 @@ public class JoinGameActivity extends Activity {
 									}
 								});
 								
-//								handle_reponse.postDelayed(new readResponse(), 0); 
-								startActivity(new Intent(JoinGameActivity.this,
-										LoginActivity.class));
+//								startActivity(new Intent(JoinGameActivity.this,
+//										LoginActivity.class));
 								finish();
 							}
 						})
@@ -236,45 +230,7 @@ public class JoinGameActivity extends Activity {
 		alert.show();
 
 	}
-//  	public class readResponse implements Runnable {
-//        public void run(){
-//             //call the service here
-//        	if(LoginActivity.flag_getpost == LoginActivity.HTTP_FREE)
-//        	{
-//	        	result = GetHttp.resultGet;
-//	        	Log.d("post", "Logout result:"+result);
-//	
-//		        if(!result.equals(""))
-//		        {
-//		 		   int index = result.indexOf("true");
-//		 		   if(index!=-1)
-//		 		   {
-//		 			   Log.d("post", "indexOf:"+index);
-//		 			   flag_stop_readResponce=8; 
-//		 		   }
-//		 		   else
-//		 		   {
-//		// 			  Toast.makeText(JoinGameActivity.this, "Error request!", Toast.LENGTH_LONG).show();
-//		 			 flag_stop_readResponce=7; 
-//		 			 handle_reponse.removeCallbacks(this);
-//		 		   }
-//		        }
-//		        else
-//		        {
-//		             ////// set the interval time here
-//		        	handle_reponse.postDelayed(this,100);
-//		        }
-//		    	if(flag_stop_readResponce==8 )
-//		    	{
-//		    		flag_stop_readResponce=0;
-//		    		handle_reponse.removeCallbacks(this);
-//		    		startActivity(new Intent(JoinGameActivity.this,LoginActivity.class));
-//		    	}
-//        	}
-//        	else
-//        		handle_reponse.postDelayed(this,100);
-//        }
-//   };
+
    
 	
 }

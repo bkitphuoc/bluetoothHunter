@@ -75,8 +75,6 @@ public class LoginActivity extends Activity {
         setContentView(R.layout.login);
         
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-//        localMacA = (TextView) findViewById(R.id.My_Mac_address);
-//        localMacA.setText(mBluetoothAdapter.getAddress());
         myMacAddress = mBluetoothAdapter.getAddress();
         if (mBluetoothAdapter == null) {
 			Toast.makeText(this, "Bluetooth is not available",
@@ -94,7 +92,6 @@ public class LoginActivity extends Activity {
 				Crittercism.logHandledException(exception);
 			}
         }
-//        handle_reponse = new Handler();
         etemail = (EditText) findViewById(R.id.UserText);
         etpass = (EditText) findViewById(R.id.PassText);
         
@@ -108,8 +105,6 @@ public class LoginActivity extends Activity {
                 // Switching to Register screen
                 Intent i = new Intent(getApplicationContext(), RegisterActivity.class);
                 startActivity(i);
-//            	GetHttp test = new GetHttp();
-//            	test.execute("http://54.255.184.201/api/v1/users?_token=IK5M5IL1MO5AhGMQmX4d");
             }
         });
         
@@ -120,23 +115,16 @@ public class LoginActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-//				result ="";
-
 				// TODO Auto-generated method stub
-//				Intent choosenTarget_t = new Intent(getApplicationContext(), JoinGameActivity.class);
-//				startActivity(choosenTarget_t);
-				
 				handle_reponse = new Handler();
 				
 				if(flag_getpost==HTTP_FREE)
 				{
-//					GetHttp.client.getConnectionManager().shutdown();
 					flag_getpost = HTTP_BUZY;
 					Log.e("http", "+ HTTP BUZY +");
 					flag_login_succ = 0;
 					PostHttp.casepost = PostHttp.LOGIN;
 					new PostHttp().execute("");
-//					handle_reponse.postDelayed(new readResponseLogin(), 0);
 					startActivity(new Intent(LoginActivity.this,
 							CircleProgressBar.class));
 				}
@@ -144,25 +132,7 @@ public class LoginActivity extends Activity {
 			}
 		});
     }
-//    @Override
-//	public void onStart() {
-//		super.onStart();
-//		if (D)
-//			Log.e(TAG, "++ ON START ++");
-//
-// 
-//		if (!mBluetoothAdapter.isEnabled()) {
-//	        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//	        startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-//	    // Otherwise, setup the chat session
-//	    } else
-//		{
-//			ensureDiscoverable();
-//		}
-//		
-//		
-//
-//	}
+
     @Override
 	public void onBackPressed() {
     	if(backButtonCount >= 1)
@@ -180,17 +150,6 @@ public class LoginActivity extends Activity {
         }
 
 	}
-//    private void ensureDiscoverable() {
-//		if (D)
-//			Log.d(TAG, "ensure discoverable");
-//		if (mBluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
-//			Intent discoverableIntent = new Intent(
-//					BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-//			discoverableIntent.putExtra(
-//					BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
-//			startActivity(discoverableIntent);
-//		}
-//	}
 
     public class readResponseLogin implements Runnable {
         public void run(){
@@ -220,11 +179,6 @@ public class LoginActivity extends Activity {
 		 				   id = Integer.parseInt(resultLogin.substring(indexId+5,indexEnd));
 		 				   Log.d("post", "id:"+id);
 		 			   }
-//		 			   flag_login_succ = 1;
-//		 			  Toast.makeText(getBaseContext(), "Login Success!", Toast.LENGTH_LONG).show();
-//		 			 resultLogin="";
-//		 			 flag_stop_readResponce=0;
-//		 			  startActivity(new Intent(LoginActivity.this,JoinGameActivity.class));
 		 			   flag_login_succ = 1;
 		 			  PostHttp.resultPost="";
 						progressing = false;

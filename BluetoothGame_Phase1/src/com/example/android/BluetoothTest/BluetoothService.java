@@ -31,6 +31,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
 
 /**
  * This class does all the work for setting up and managing Bluetooth
@@ -538,7 +539,7 @@ public class BluetoothService {
                     Log.i(TAG, buffer.toString());
                     String readMessage = new String(buffer, 0, bytes);
                     Log.i(TAG, readMessage +"===============================================");
-                    if((readMessage.equals("I pess back"))||(readMessage.equals("You die!"))){
+                    if((readMessage.equals("I pess back"))||(readMessage.equals("new session"))){
                     	Log.i(TAG, "I press back------------------------->");
                     	disableReConnect = true;
                     	String message = "I confirm you press back";
@@ -551,8 +552,9 @@ public class BluetoothService {
                     	disableReConnect = true;
                     	//BluetoothChatService.this.start();
                     }
-                    if(readMessage.equals("You die!")){
+                    if(readMessage.equals("new session")){
                      	disableReConnect = true;
+                     	BluetoothTest.mResultButton.setVisibility(View.INVISIBLE);
                       }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
