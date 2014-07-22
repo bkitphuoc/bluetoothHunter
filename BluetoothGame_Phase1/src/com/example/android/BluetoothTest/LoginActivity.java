@@ -20,6 +20,7 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -30,6 +31,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crittercism.app.Crittercism;
@@ -37,6 +39,9 @@ import com.example.android.BluetoothTest.R;
 
 
 public class LoginActivity extends Activity {
+	
+	private static final String TAG = "Login";
+	private static final boolean D = true;
 	
 	public static int flag_debug = 0;
 	public static String token="";
@@ -49,11 +54,16 @@ public class LoginActivity extends Activity {
 	static Boolean HTTP_BUZY = true;
 	
 	static Boolean flag_getpost = HTTP_FREE;
+	private BluetoothAdapter mBluetoothAdapter = null;
+	private TextView localMacA;
+	private static final int REQUEST_ENABLE_BT = 3;
 	
 	static EditText etemail;
 	static EditText etpass;
+	static String myMacAddress;
+	
 	int backButtonCount=0;
-  private ProgressBar mProgress;
+	private ProgressBar mProgress;
 	public static boolean progressing = true;
 	
     @Override
@@ -63,6 +73,17 @@ public class LoginActivity extends Activity {
         
         // setting default screen to login.xml
         setContentView(R.layout.login);
+        
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+//        localMacA = (TextView) findViewById(R.id.My_Mac_address);
+//        localMacA.setText(mBluetoothAdapter.getAddress());
+        myMacAddress = mBluetoothAdapter.getAddress();
+        if (mBluetoothAdapter == null) {
+			Toast.makeText(this, "Bluetooth is not available",
+					Toast.LENGTH_LONG).show();
+			finish();
+			return;
+		}
  
         if(flag_debug==1)
         {
@@ -123,7 +144,25 @@ public class LoginActivity extends Activity {
 			}
 		});
     }
-    
+//    @Override
+//	public void onStart() {
+//		super.onStart();
+//		if (D)
+//			Log.e(TAG, "++ ON START ++");
+//
+// 
+//		if (!mBluetoothAdapter.isEnabled()) {
+//	        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//	        startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+//	    // Otherwise, setup the chat session
+//	    } else
+//		{
+//			ensureDiscoverable();
+//		}
+//		
+//		
+//
+//	}
     @Override
 	public void onBackPressed() {
     	if(backButtonCount >= 1)
@@ -141,6 +180,17 @@ public class LoginActivity extends Activity {
         }
 
 	}
+//    private void ensureDiscoverable() {
+//		if (D)
+//			Log.d(TAG, "ensure discoverable");
+//		if (mBluetoothAdapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+//			Intent discoverableIntent = new Intent(
+//					BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+//			discoverableIntent.putExtra(
+//					BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
+//			startActivity(discoverableIntent);
+//		}
+//	}
 
     public class readResponseLogin implements Runnable {
         public void run(){

@@ -73,7 +73,10 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 //		        jsonObject.put("password",LoginActivity.etpass.getText().toString());
 //	        	jsonObject.put("email","user_1@domain.com");
 		        jsonObject.put("password","abc123");
-		        Log.d("post", "email="+LoginActivity.etemail.getText().toString() + ", pass=" + LoginActivity.etpass.getText().toString());
+		        jsonObject.put("bluetooth_address",LoginActivity.myMacAddress);
+		        Log.d("post", "email="+LoginActivity.etemail.getText().toString() + ", "
+		        		+ "pass=" + LoginActivity.etpass.getText().toString()
+		        		+ "bluetooth_address"+LoginActivity.myMacAddress);
 	        }
 	        else if(casepost==TRACKING)
 	        {

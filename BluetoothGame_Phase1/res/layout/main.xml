@@ -27,22 +27,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <LinearLayout
-        android:id="@+id/linearLayout1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:gravity="center"
-        android:orientation="horizontal" >
-
-        <Button
-            android:id="@+id/button_play"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/play"
-            android:textColor="#0f1bb0"
-            android:textSize="30dip" />
-    </LinearLayout>
+    
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,7 +44,23 @@
             android:textColor="#0f1bb0"
             android:textSize="30dip" />
     </LinearLayout>
+	<LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:orientation="horizontal" >
 
+        <Button
+            android:id="@+id/button_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/play"
+            android:textColor="#0f1bb0"
+            android:textSize="30dip" />
+    </LinearLayout>
+    
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -73,17 +74,31 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal" >
 
+          
+
             <TextView
+                android:id="@+id/textDis"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Target 1:"
+                android:text="Distance:"
+                android:textColor="#ff0000" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:id="@+id/target_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:textColor="#ff0000" />
 
             <TextView
                 android:id="@+id/distance_1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No distance"
+                android:text="Updating..."
                 android:textColor="#ff0000" />
         </LinearLayout>
 
@@ -93,16 +108,16 @@
             android:orientation="horizontal" >
 
             <TextView
+                android:id="@+id/target_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Target 2:"
                 android:textColor="#ff0000" />
 
             <TextView
                 android:id="@+id/distance_2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No distance"
+                android:text="Updating..."
                 android:textColor="#ff0000" />
         </LinearLayout>
 
@@ -112,16 +127,16 @@
             android:orientation="horizontal" >
 
             <TextView
+                android:id="@+id/target_3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Target 3:"
                 android:textColor="#ff0000" />
 
             <TextView
                 android:id="@+id/distance_3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No distance:"
+                android:text="Updating..."
                 android:textColor="#ff0000" />
         </LinearLayout>
 
@@ -131,16 +146,16 @@
             android:orientation="horizontal" >
 
             <TextView
+                android:id="@+id/target_4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Target 4:"
                 android:textColor="#ff0000" />
 
             <TextView
                 android:id="@+id/distance_4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="No distance"
+                android:text="Updating..."
                 android:textColor="#ff0000" />
         </LinearLayout>
     </LinearLayout>

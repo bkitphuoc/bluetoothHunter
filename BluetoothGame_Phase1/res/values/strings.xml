@@ -22,7 +22,8 @@
     <string name="send">Shot</string>
     <string name="play">PLAY</string>
     <string name="test">Test</string>
-    <string name="not_connected">You are not connected to a device</string>
+    <string name="not_connected">Be not connected to a device. </string>
+    <string name="not_target">Not choose target. </string>
     <string name="bt_not_enabled_leaving">Bluetooth was not enabled. Leaving Bluetooth Test.</string>
     <string name="title_connecting">connecting...</string>
     <string name="title_listen">listening...</string>

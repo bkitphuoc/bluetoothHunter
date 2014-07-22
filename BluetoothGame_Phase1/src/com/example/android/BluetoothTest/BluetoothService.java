@@ -537,7 +537,7 @@ public class BluetoothService {
                     Log.i(TAG, buffer.toString());
                     String readMessage = new String(buffer, 0, bytes);
                     Log.i(TAG, readMessage +"===============================================");
-                    if(readMessage.equals("I pess back")){
+                    if((readMessage.equals("I pess back"))||(readMessage.equals("You die!"))){
                     	Log.i(TAG, "I press back------------------------->");
                     	disableReConnect = true;
                     	String message = "I confirm you press back";

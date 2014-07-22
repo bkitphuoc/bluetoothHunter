@@ -32,6 +32,7 @@ public class GetHttp extends AsyncTask<String, Void, String>
 	 static Boolean[] _stage = new Boolean[6];
 	 static String[] _Long= new String[6];
 	 static String[] _Lat = new String[6];
+	 static String[] _BTAddress = new String[6];
 	 static int HIT=1;
 	 static int FIGHT=2;
 	 static int FIGHT_VIEW=3;
@@ -46,7 +47,10 @@ public class GetHttp extends AsyncTask<String, Void, String>
 	 static int[] LatIndex = new int[6];
 	 static int[] LogIndex = new int[6];
 	 static int[] StageIndex = new int[6];
+	 static int[] BTAddressIndex = new int[6];
 	
+	 static Boolean choseTarget=false;
+	 static int cntUserId;
 	
 	interface OnPost{
 		void onpost(String result);
@@ -83,17 +87,6 @@ public class GetHttp extends AsyncTask<String, Void, String>
 		Log.e("http", "+ HTTP FREE +");
 		
 	}
-	private static String convertInputStreamToString(InputStream inputStream) throws IOException{
-	    BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
-	    String line = "";
-	    String result = "";
-	    while((line = bufferedReader.readLine()) != null)
-	        result += line;
-	
-	    inputStream.close();
-	    return result;
-	
-	}  
 	
 	@Override
 	protected String doInBackground(String[] p1)
@@ -101,24 +94,14 @@ public class GetHttp extends AsyncTask<String, Void, String>
 		// TODO: Implement this method
 		httpget = new HttpGet(p1[0]);
 		HttpResponse response;
-//		InputStream inputStream = null;
 		try{
 			response = client.execute(httpget);
 			result = EntityUtils.toString( response.getEntity());
-//			inputStream = response.getEntity().getContent();
-//			
 		}catch(Exception ex){
 
 			return null;
 		}
-//		 finally {
-//			   try {
-//	                 if (inputStream != null) {
-//	                     inputStream.close();
-//	                 }
-//			   }catch (Exception e2) {
-//			   }
-//         }
+
 
 
 		
