@@ -162,6 +162,7 @@ public class BluetoothService {
         	mConnectThread.start();
         setState(STATE_CONNECTING);
         Log.e("socket","Connecting");
+        disableReConnect = false;
     }
 
     /**
@@ -550,6 +551,9 @@ public class BluetoothService {
                     	disableReConnect = true;
                     	//BluetoothChatService.this.start();
                     }
+                    if(readMessage.equals("You die!")){
+                     	disableReConnect = true;
+                      }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     
@@ -611,4 +615,9 @@ public class BluetoothService {
         }
 
 }
+    
+    public void reset(){
+    	disableReConnect = true;
+    	start();
+    }
 }

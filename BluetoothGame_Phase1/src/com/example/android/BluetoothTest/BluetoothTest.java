@@ -430,8 +430,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 							                targetId = 0;
 							                GetHttp.choseTarget=false;
 							                mPlayButton.setText("Reset");
-							                
-							                mChatService.stop();
 //							                sendMessage("I pess back");
 				    					}
 				    				}
@@ -684,7 +682,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	                mResultButton.setVisibility(View.VISIBLE);
 	                mResultButton.setText("YOU WIN");
 	                flag_win = 0;
-	                
+	                mChatService.reset();
 //	                mChatService.stop();
 				 }
 	                break;
@@ -708,6 +706,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 //						flag_play= 0;
 						
 //						mChatService.stop();
+		                mChatService.reset();
 	                }
 	                if (readMessage.equals("new session") )
 	                {
