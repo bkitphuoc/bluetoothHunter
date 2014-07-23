@@ -1221,7 +1221,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			Log.d("fight","Fight 1");
 			if(arg0.equals(MarkerArr[GetHttp.cntUserId])){
 				Log.d("fight","Fight 2");
-				GetHttp fight = new GetHttp();
+				
 				if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
 				{
 					Log.d("fight","Fight 3");
@@ -1231,42 +1231,87 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						Log.d("fight","BTAddress"+GetHttp._BTAddress[GetHttp.cntUserId]);
 						if(!GetHttp._BTAddress[GetHttp.cntUserId].equals("ull,"))
 						{
-							fight.execute("http://54.255.184.201/api/v1/fight?target="+GetHttp.cntUserId+"&_token="+LoginActivity.token);
-							Log.d("fight","http://54.255.184.201/api/v1/fight?target="+GetHttp.cntUserId+"&_token="+LoginActivity.token);
-							GetHttp.setOnPost(new OnPost(){
-								public void onpost(String result){
-									Log.d("fight","result fight:"+result);
-									int index = result.indexOf("false");
-									if(index!=-1)
-									{
-										Toast.makeText(getBaseContext(),"Can not choose target", Toast.LENGTH_LONG).show();
-									}
-									index = result.indexOf("true");							
-									if(index!=-1)
-									{
-										
-										GetHttp.choseTarget = true;
-										targetId = GetHttp.cntUserId;
-										Log.d("fight","target id:"+targetId);
-										device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
-										mChatService.connect(device, true);
-										Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show();
-//										handle_shooting.post(updateStateButton);
-									}
-								}
-							});
+							
+							AlertDialog.Builder builder = new AlertDialog.Builder(this);
+							builder.setMessage("Are you sure you choose player"+GetHttp.cntUserId+" ?")
+									.setCancelable(false)
+									.setPositiveButton("Yes",
+											new DialogInterface.OnClickListener() {
+												public void onClick(DialogInterface dialog, int id) {
+													GetHttp fight = new GetHttp();
+													fight.execute("http://54.255.184.201/api/v1/fight?target="+GetHttp.cntUserId+"&_token="+LoginActivity.token);
+													Log.d("fight","http://54.255.184.201/api/v1/fight?target="+GetHttp.cntUserId+"&_token="+LoginActivity.token);
+													GetHttp.setOnPost(new OnPost(){
+														public void onpost(String result){
+															Log.d("fight","result fight:"+result);
+															int index = result.indexOf("false");
+															if(index!=-1)
+															{
+																Toast.makeText(getBaseContext(),"Can not choose target", Toast.LENGTH_LONG).show();
+															}
+															index = result.indexOf("true");							
+															if(index!=-1)
+															{
+																
+																GetHttp.choseTarget = true;
+																targetId = GetHttp.cntUserId;
+																Log.d("fight","target id:"+targetId);
+																device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
+																mChatService.connect(device, true);
+																Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show();
+															}
+														}
+													});	
+
+												}
+											})
+									.setNegativeButton("No", new DialogInterface.OnClickListener() {
+										public void onClick(DialogInterface dialog, int id) {
+											LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+											dialog.cancel();
+										}
+									});
+							AlertDialog alert = builder.create();
+							alert.show();				
+							
+							
+							
+							
+							
 						}
 						else
 						{
-							Toast.makeText(getBaseContext(),"Format of address bluetooth is false", Toast.LENGTH_LONG).show();
-							LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+							
+							AlertDialog.Builder builder = new AlertDialog.Builder(this);
+							builder.setMessage("Format address bluetooth of player"+GetHttp.cntUserId+"is false! Please choose other!")
+									.setCancelable(false)
+									.setPositiveButton("Ok",
+											new DialogInterface.OnClickListener() {
+												public void onClick(DialogInterface dialog, int id) {
+													LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+												}
+											});
+							AlertDialog alert = builder.create();
+							alert.show();	
+												
+							
 						}
 						
 					}
 					else 
 					{
-						Toast.makeText(getBaseContext(),"Can't choose other, your target is player"+targetId, Toast.LENGTH_LONG).show();
-						LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+						AlertDialog.Builder builder = new AlertDialog.Builder(this);
+						builder.setMessage("Can't choose other, your target is player"+targetId)
+								.setCancelable(false)
+								.setPositiveButton("Ok",
+										new DialogInterface.OnClickListener() {
+											public void onClick(DialogInterface dialog, int id) {
+												LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+											}
+										});
+						AlertDialog alert = builder.create();
+						alert.show();
+						
 					}
 
 				}
