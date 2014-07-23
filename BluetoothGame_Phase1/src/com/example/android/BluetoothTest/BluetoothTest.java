@@ -147,6 +147,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	private boolean remotePlayIsPressed = false;
 	private int flag_win = 0;
 	boolean isConnected = false;
+	static String sendMessage="";
 	
 	GoogleMap mMap;
 	LocationManager locationManager ;
@@ -339,7 +340,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 								
 								
 								if (mChatService.getState() == BluetoothService.STATE_CONNECTED){
-									sendMessage("I pess back");
+									sendMessage("I press back");
 								}
 								else {
 									mChatService.stop();
@@ -405,9 +406,11 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 					{
 						mPlayButton.setText("Play");
 						String message = "new session";
+						sendMessage = message;
 						sendMessage(message);
+						
 						mResultButton.setVisibility(View.INVISIBLE);
-						mChatService.reset();
+//						mChatService.reset();
 //						mChatService.stop();
 					}
 					else
@@ -432,6 +435,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 					    					{
 					    						Log.d("result","result Win");
 					    						String message = "You die!";
+					    						sendMessage = message;
 								                sendMessage(message);
 								                flag_shoot = 0;
 								                flag_win = 1;
@@ -479,27 +483,27 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				
-				if(mTestButton.getText().equals("Test"))
-				{
-					mTestButton.setText("Other");
-				}
-				else if(mTestButton.getText().equals("Other"))
-				{
-					mTestButton.setText("Test");
-				}
-//				GetHttp hit = new GetHttp();
-//                if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
-//                {
-//                	LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
-//	                hit.execute("http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
-//	                Log.d("fight","http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
-//	                GetHttp.setOnPost(new OnPost(){
-//	    				public void onpost(String result){
-//	    					Log.d("result","result hit:"+result);
-//	    					int index=result.indexOf("You won.");
-//	    					if(index!=-1)
-//	    					{
-//	    						Log.d("result","result Win");
+//				if(mTestButton.getText().equals("Test"))
+//				{
+//					mTestButton.setText("Other");
+//				}
+//				else if(mTestButton.getText().equals("Other"))
+//				{
+//					mTestButton.setText("Test");
+//				}
+				GetHttp hit = new GetHttp();
+                if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
+                {
+                	LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
+	                hit.execute("http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
+	                Log.d("fight","http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
+	                GetHttp.setOnPost(new OnPost(){
+	    				public void onpost(String result){
+	    					Log.d("result","result hit:"+result);
+	    					int index=result.indexOf("You won.");
+	    					if(index!=-1)
+	    					{
+	    						Log.d("result","result Win");
 //	    						String message = "You die!";
 //				                sendMessage(message);
 //				                flag_shoot = 0;
@@ -510,11 +514,11 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 //				                mPlayButton.setText("Reset");
 //				                handle_shooting.removeCallbacks(updateStateButton);
 //				                mChatService.stop();
-//
-//	    					}
-//	    				}
-//	    			});
-//                }
+
+	    					}
+	    				}
+	    			});
+                }
 			}
 		});
 		// Initialize the BluetoothChatService to perform bluetooth connections
@@ -690,17 +694,23 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				break;
 			case MESSAGE_WRITE:
 				byte[] writeBuf = (byte[]) msg.obj;
-//				 mConversationArrayAdapter.clear();
-				 if(flag_win==1)
-				 {
-//	                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.win));
-					mResultButton.setBackgroundColor(0x00FFFF00);
-					 mResultButton.setTextColor(Color.parseColor("#ff0000"));
-	                mResultButton.setVisibility(View.VISIBLE);
-	                mResultButton.setText("YOU WIN");
-	                flag_win = 0;
-//	                mChatService.reset();
-				 }
+				if(sendMessage.equals("You die!") ){
+//					 mConversationArrayAdapter.clear();
+					 if(flag_win==1)
+					 {
+//		                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.win));
+						mResultButton.setBackgroundColor(0x00FFFF00);
+						 mResultButton.setTextColor(Color.parseColor("#ff0000"));
+		                mResultButton.setVisibility(View.VISIBLE);
+		                mResultButton.setText("YOU WIN");
+		                flag_win = 0;
+//		                mChatService.reset();
+					 }
+				}
+				else if(sendMessage.equals("new session")){
+					mPlayButton.setText("PLAY");
+					mChatService.reset();
+				}
 	                break;
 	            case MESSAGE_READ:
 	                byte[] readBuf = (byte[]) msg.obj;
@@ -722,13 +732,14 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 //						flag_play= 0;
 						
 //						mChatService.stop();
-		                mChatService.reset();
+		                
 	                }
 	                if (readMessage.equals("new session") )
 	                {
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
 	                	mResultButton.setVisibility(View.INVISIBLE);
-
+	                	mChatService.reset();
+	                	mPlayButton.setText("PLAY");
 	                }
 
 	                break;
@@ -738,6 +749,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				Toast.makeText(getApplicationContext(),
 						"Connected to " + mConnectedDeviceName,
 						Toast.LENGTH_SHORT).show();
+				mPlayButton.setText("PLAY");
 				mPlayButton.setEnabled(true);
 				break;
 			case MESSAGE_TOAST:

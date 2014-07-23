@@ -114,7 +114,7 @@ public class BluetoothService {
      * Start the chat service. Specifically start AcceptThread to begin a
      * session in listening (server) mode. Called by the Activity onResume() */
     public synchronized void start() {
-        if (D) Log.d(TAG, "start");
+        if (D) Log.d(TAG, "start of BluetoothService ------------------------->");
 
         //resetConnection();
         
@@ -539,7 +539,7 @@ public class BluetoothService {
                     Log.i(TAG, buffer.toString());
                     String readMessage = new String(buffer, 0, bytes);
                     Log.i(TAG, readMessage +"===============================================");
-                    if((readMessage.equals("I pess back"))||(readMessage.equals("new session"))){
+                    if((readMessage.equals("I press back"))){
                     	Log.i(TAG, "I press back------------------------->");
                     	disableReConnect = true;
                     	String message = "I confirm you press back";
@@ -554,7 +554,6 @@ public class BluetoothService {
                     }
                     if(readMessage.equals("new session")){
                      	disableReConnect = true;
-                     	BluetoothTest.mResultButton.setVisibility(View.INVISIBLE);
                       }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
