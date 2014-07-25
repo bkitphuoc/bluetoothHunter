@@ -554,11 +554,12 @@ public class BluetoothService {
                     }
                     if(readMessage.equals("new session")){
                      	disableReConnect = true;
+                     	BluetoothTest.resetCommandIsTrue = true;
                       }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     
-                    if(disableReConnect == false){
+                    if(disableReConnect == false || BluetoothTest.resetCommandIsTrue == false){
                         if(isServer == true){
                         	connectionLostAsServer();
                         }

@@ -148,6 +148,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	private int flag_win = 0;
 	boolean isConnected = false;
 	static String sendMessage="";
+	public static boolean resetCommandIsTrue = false;
 	
 	GoogleMap mMap;
 	LocationManager locationManager ;
@@ -287,15 +288,17 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		if (D)
 			Log.e(TAG, "++ ON START ++");
 
- 
+		resetCommandIsTrue = false;
 		if (!mBluetoothAdapter.isEnabled()) {
 	        Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 	        startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
 	    // Otherwise, setup the chat session
 	    } else
 		{
-			if (mChatService == null)
+			if (mChatService == null){
+				Log.e(TAG, "before setupChat() menthod");
 				setupChat();
+			}
 			ensureDiscoverable();
 		}
 		
@@ -331,6 +334,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	@SuppressWarnings("deprecation")
 	@Override
 	public void onBackPressed() {
+		Log.i(TAG, "onBackPressed() menthod");
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setMessage("Are you sure you want to exit?")
 				.setCancelable(false)
@@ -361,6 +365,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 								handle_info.removeCallbacks(ShowInfor);
 								handle_shooting.removeCallbacks(updateStateButton);
 								showInfo=false;
+								Log.i(TAG, "front finish() menthod");
+								 mChatService = null;
 								finish();
 							}
 						})
@@ -405,6 +411,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 					if(mPlayButton.getText().equals("Reset"))
 					{
 						mPlayButton.setText("Play");
+						resetCommandIsTrue = true;
 						String message = "new session";
 						sendMessage = message;
 						sendMessage(message);
@@ -522,8 +529,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			}
 		});
 		// Initialize the BluetoothChatService to perform bluetooth connections
-		mChatService = new BluetoothService(this, mHandler);
-
+		if(mChatService == null){
+			mChatService = new BluetoothService(this, mHandler);
+		}
 		// Initialize the buffer for outgoing messages
 		mOutStringBuffer = new StringBuffer("");
 	}
@@ -710,6 +718,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				else if(sendMessage.equals("new session")){
 					mPlayButton.setText("PLAY");
 					mChatService.reset();
+					resetCommandIsTrue = false;
 				}
 	                break;
 	            case MESSAGE_READ:
@@ -739,6 +748,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
 	                	mResultButton.setVisibility(View.INVISIBLE);
 	                	mChatService.reset();
+	                	resetCommandIsTrue = false;
 	                	mPlayButton.setText("PLAY");
 	                }
 
