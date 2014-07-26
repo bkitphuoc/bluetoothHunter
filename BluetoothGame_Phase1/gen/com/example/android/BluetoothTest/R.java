@@ -200,7 +200,6 @@ containing a value of this type.
         public static final int button_testServer=0x7f05001a;
         public static final int checkBox1=0x7f050008;
         public static final int circlePB=0x7f050005;
-        public static final int discoverable=0x7f05002c;
         public static final int distance_1=0x7f05001f;
         public static final int distance_2=0x7f050021;
         public static final int distance_3=0x7f050023;
@@ -217,7 +216,6 @@ containing a value of this type.
         public static final int reg_fullname=0x7f050026;
         public static final int reg_password=0x7f050028;
         public static final int satellite=0x7f050002;
-        public static final int secure_connect_scan=0x7f05002b;
         public static final int target_1=0x7f05001e;
         public static final int target_2=0x7f050020;
         public static final int target_3=0x7f050022;

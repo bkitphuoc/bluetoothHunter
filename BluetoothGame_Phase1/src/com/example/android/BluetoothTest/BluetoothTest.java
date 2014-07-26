@@ -29,6 +29,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.CancelableCallback;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -65,6 +66,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;                    
+import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -237,19 +239,83 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
             Criteria criteria = new Criteria();
  
             // Getting the name of the best provider
-            String provider = locationManager.getBestProvider(criteria, true);
- 
-            // Getting Current Location
-            Location loc = locationManager.getLastKnownLocation(provider);
-        
             
-            if(loc!=null){
-                locationListener.onLocationChanged(loc);
+ 
+            LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
+            boolean enabled = service
+              .isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+            // check if enabled and if not send user to the GSP settings
+            // Better solution would be to display a dialog and suggesting to 
+            // go to the settings
+            if (!enabled) {
+            	AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+
+                // Setting Dialog Title
+                alertDialog.setTitle("GPS is settings");
+
+                // Setting Dialog Message
+                alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
+
+                // Setting Icon to Dialog
+                //alertDialog.setIcon(R.drawable.delete);
+
+                // On pressing Settings button
+                alertDialog.setPositiveButton("Settings", new 
+
+                           DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog,int which) {
+                        Intent intent = new 
+                                Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    }
+                });
+
+                // on pressing cancel button
+                alertDialog.setNegativeButton("Cancel", new 
+                 DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                    }
+                });
+
+                // Showing Alert Message
+                alertDialog.show();
+              
+            } 
+            
+            // Getting Current Location
+//            if(provider != null)
+            else
+            {
+            	String provider = locationManager.getBestProvider(criteria, true);
+            	Location loc = locationManager.getLastKnownLocation(provider);
+            	 if(loc!=null){
+                     locationListener.onLocationChanged(loc);
+                 }
+//                 
+                 locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+//                 locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
+                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);	
             }
-//            
-            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-//            locationManager.requestLocationUpdates(provider, 0, 0, locationListener);
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);	
+//            else
+//            {
+//            	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//				builder.setMessage("Please enable Location access!")
+//						.setCancelable(false)
+//						.setPositiveButton("Ok",
+//								new DialogInterface.OnClickListener() {
+//									public void onClick(DialogInterface dialog, int id) {
+//										LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+//									}
+//								});
+//				AlertDialog alert = builder.create();
+//				alert.show();
+//            }
+//        
+            
+           
             
         }
 		
@@ -361,6 +427,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 								locationManager.removeUpdates(locationListener);;
 								 targetId = 0;
 				                GetHttp.choseTarget=false;
+				                LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
 				                
 								handle_info.removeCallbacks(ShowInfor);
 								handle_shooting.removeCallbacks(updateStateButton);
@@ -819,7 +886,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		return true;
 	}
 
-	@Override
+	/*@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		Intent serverIntent = null;
 		switch (item.getItemId()) {
@@ -842,7 +909,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			return true;
 		}
 		return false;
-	}
+	}*/
 
 
 	
@@ -858,10 +925,26 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			myLat = location.getLatitude();
 			if(zoomMap==false)
         	{
-    		    CameraUpdate cameraUpdate1 = CameraUpdateFactory.newLatLngZoom(latLng, 15);
-        		mMap.animateCamera(cameraUpdate1);
+				Log.d("zoom","zoom 15");
+    		    CameraUpdate cameraUpdate1 = CameraUpdateFactory.newLatLngZoom(latLng, 15.0f);
+//        		mMap.animateCamera(cameraUpdate1);
+        		mMap.animateCamera(cameraUpdate1, new CancelableCallback() {
+					
+					@Override
+					public void onFinish() {
+						// TODO Auto-generated method stub
+						zoomMap = true;
+					}
+					
+					@Override
+					public void onCancel() {
+						// TODO Auto-generated method stub
+						
+					}
+				});
+        		
     			
-        		zoomMap = true;
+        		
         	}
         	else
         	{
@@ -883,8 +966,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			//=> create handler here -> parameter is function implement (1),(2),(3),(4). 
 			
 			Float acc = location.getAccuracy();
-//		    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 25);
-//			CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(latLng);
 		    
 	        BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
 	        BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
