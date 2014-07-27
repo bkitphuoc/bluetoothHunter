@@ -43,7 +43,7 @@ public class LoginActivity extends Activity {
 	private static final String TAG = "Login";
 	private static final boolean D = true;
 	
-	public static int flag_debug = 0;
+	public static int flag_debug = 1;
 	public static String token="";
 	public static int id=0;
 	static String resultLogin = "";
@@ -127,6 +127,7 @@ public class LoginActivity extends Activity {
 					new PostHttp().execute("");
 					startActivity(new Intent(LoginActivity.this,
 							CircleProgressBar.class));
+					finish();
 				}
                 
 			}
@@ -151,73 +152,5 @@ public class LoginActivity extends Activity {
 
 	}
 
-    public class readResponseLogin implements Runnable {
-        public void run(){
-             //call the service here
-//        	checkResponse();
-        	if(flag_getpost == HTTP_FREE)
-        	{
-	        	resultLogin = PostHttp.resultPost;
-	//        	if(flag_stop_readResponce<6)
-	        		flag_stop_readResponce++;
-	        	Log.d("post", "Login result:"+resultLogin);
-	// 		   tvrespond.setText("response:"+result);
-	        	if(!resultLogin.equals(""))
-	        	{
-		 		   int index = resultLogin.indexOf("token");
-		 		   if(index!=-1)
-		 		   {
-		 			   Log.d("post", "indexOf token:"+index);
-		 			   token = resultLogin.substring(index+8,index+28);
-		 			   Log.d("post", "token:"+token);
-		 			   
-		 			   int indexId = resultLogin.indexOf("id");
-		 			   if(index!=-1)
-		 			   {
-		 				   Log.d("post","indexOf id:"+indexId);
-		 				   int indexEnd=resultLogin.indexOf("\"",indexId+5);
-		 				   id = Integer.parseInt(resultLogin.substring(indexId+5,indexEnd));
-		 				   Log.d("post", "id:"+id);
-		 			   }
-		 			   flag_login_succ = 1;
-		 			  PostHttp.resultPost="";
-						progressing = false;
-						if (progressing == false)
-							Log.d("progress", "flase");
-						resultLogin = "";
-						flag_stop_readResponce = 0;
-						handle_reponse.removeCallbacks(this);
-						startActivity(new Intent(LoginActivity.this,
-								CircleProgressBar.class));
-		 		   }
-		 		   else
-		 		   {
-		 			   if(flag_stop_readResponce>8)
-		 			   {
-		 				   Toast.makeText(getBaseContext(), "Error Account!", Toast.LENGTH_LONG).show();
-		 				   flag_stop_readResponce=0;
-		 				   handle_reponse.removeCallbacks(this);
-		 				  flag_getpost = HTTP_FREE;
-		 			   }
-		 			  
-		 		   }
-	        	}
-	        	else
-	        		handle_reponse.postDelayed(this, 100);
-	 		  if(flag_login_succ==1)
-	 		  {
-	 			  handle_reponse.removeCallbacks(this);
-	 			  flag_getpost = HTTP_FREE;
-	 		  }
-	             
-	        }
-        	else if((flag_getpost == HTTP_BUZY) && (flag_login_succ!=1))
-        	{
-        		handle_reponse.postDelayed(this, 100);
-        	}
-        	else
-        		handle_reponse.removeCallbacks(this);
-        }
-   };
    
 }

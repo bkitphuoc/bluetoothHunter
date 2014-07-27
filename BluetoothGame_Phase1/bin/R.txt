@@ -77,7 +77,6 @@ int id button_scan 0x7f05000e
 int id button_testServer 0x7f05001a
 int id checkBox1 0x7f050008
 int id circlePB 0x7f050005
-int id discoverable 0x7f05002c
 int id distance_1 0x7f05001f
 int id distance_2 0x7f050021
 int id distance_3 0x7f050023
@@ -94,7 +93,6 @@ int id reg_email 0x7f050027
 int id reg_fullname 0x7f050026
 int id reg_password 0x7f050028
 int id satellite 0x7f050002
-int id secure_connect_scan 0x7f05002b
 int id target_1 0x7f05001e
 int id target_2 0x7f050020
 int id target_3 0x7f050022

@@ -154,8 +154,6 @@ public class JoinGameActivity extends Activity {
 										        Log.e("http", "+ HTTP FREE LOGOUT+");
 											}
 										});
-//										startActivity(new Intent(JoinGameActivity.this,
-//												LoginActivity.class));
 										finish();
 									}
 								})
