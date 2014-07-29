@@ -70,8 +70,11 @@ public class BluetoothService {
     public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
     // em thinh them code
-    public boolean isServer = true;
-    public boolean isClien = false;
+    
+    public static boolean isServer = true;
+  //Bach
+//    public static boolean isServer = false;
+    public static boolean isClient = false;
     public BluetoothDevice bluetoothDeviceBackup = null;
     public boolean disableReConnect = false;
     public boolean secureBackUp = false; 
@@ -98,6 +101,19 @@ public class BluetoothService {
      */
     private synchronized void setState(int state) {
         if (D) Log.d(TAG, "setState() " + mState + " -> " + state);
+        if(mState==STATE_LISTEN && state == STATE_CONNECTED)
+        {
+        	BluetoothTest.role = BluetoothTest.TARGET;
+        }
+        else if(mState==STATE_LISTEN && state == STATE_CONNECTING)
+        {
+        	BluetoothTest.role = BluetoothTest.HUNTER;
+        }
+        else if(state==STATE_LISTEN||state==STATE_LISTEN)
+        {
+        	BluetoothTest.role = BluetoothTest.NO_PLAY;
+        }
+        
         mState = state;
 
         // Give the new state to the Handler so the UI Activity can update
@@ -131,10 +147,7 @@ public class BluetoothService {
             mSecureAcceptThread = new AcceptThread(true);
             mSecureAcceptThread.start();
         }
-//        if (mInsecureAcceptThread == null) {
-//            mInsecureAcceptThread = new AcceptThread(false);
-//            mInsecureAcceptThread.start();
-//        }
+
     }
 
     /**
@@ -298,7 +311,11 @@ public class BluetoothService {
     private void reStart(){
     	
         isServer = true;
-        isClien = false;
+        isClient = false;
+        BluetoothTest.role = BluetoothTest.NO_PLAY;
+    	// Bach
+//    	isServer = false;
+//        isClient = false;
         disableReConnect = false;
     	// restart
     	start();
@@ -321,16 +338,10 @@ public class BluetoothService {
             // Create a new listening server socket
             try {
                 if (secure) {
-//                    tmp = mAdapter.listenUsingRfcommWithServiceRecord(NAME_SECURE,
-//                        MY_UUID_SECURE);
                     tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(
                           NAME_INSECURE, MY_UUID_INSECURE);
-	                  
                 } 
-//                else {
-//                    tmp = mAdapter.listenUsingInsecureRfcommWithServiceRecord(
-//                            NAME_INSECURE, MY_UUID_INSECURE);
-//                }
+
             } catch (IOException e) {
                 Log.e(TAG, "Socket Type: " + mSocketType + "listen() failed", e);
             }
@@ -360,12 +371,19 @@ public class BluetoothService {
                     synchronized (BluetoothService.this) {
                         switch (mState) {
                         case STATE_LISTEN:
-                        case STATE_CONNECTING:
-                            // Situation normal. Start the connected thread.
                         	isServer = true;
-                        	isClien = false;
+                        	isClient = false;
                             connected(socket, socket.getRemoteDevice(),
                                     mSocketType);
+//                            BluetoothTest.role = BluetoothTest.NO_PLAY;
+                            break;
+                        case STATE_CONNECTING:
+                            // Situation normal. Start the connected thread.
+                        	isServer = false;
+                        	isClient = true;
+                            connected(socket, socket.getRemoteDevice(),
+                                    mSocketType);
+//                            BluetoothTest.role = BluetoothTest.HUNTER;
                             break;
                         case STATE_NONE:
                         case STATE_CONNECTED:
@@ -414,15 +432,10 @@ public class BluetoothService {
             // given BluetoothDevice
             try {
                 if (secure) {
-//                    tmp = device.createRfcommSocketToServiceRecord(
-//                            MY_UUID_SECURE);
                 	tmp = device.createInsecureRfcommSocketToServiceRecord(
                           MY_UUID_INSECURE);
                 } 
-//                else {
-//                    tmp = device.createInsecureRfcommSocketToServiceRecord(
-//                            MY_UUID_INSECURE);
-//                }
+
             } catch (IOException e) {
                 Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
             }
@@ -456,31 +469,14 @@ public class BluetoothService {
             	}
             }
 
-// code mau - da bi em thinh vo hieu            
-//            try {
-//                // This is a blocking call and will only return on a
-//                // successful connection or an exception
-//                mmSocket.connect();
-//            } catch (IOException e) {
-//                // Close the socket
-//                try {
-//                    mmSocket.close();
-//                } catch (IOException e2) {
-//                    Log.e(TAG, "unable to close() " + mSocketType +
-//                            " socket during connection failure", e2);
-//                }
-//                connectionFailed();
-//                return;
-//            }
-
-            // Reset the ConnectThread because we're done
             synchronized (BluetoothService.this) {
                 mConnectThread = null;
             }
 
             // Start the connected thread
             isServer = false;
-            isClien = true;
+            isClient = true;
+            BluetoothTest.role = BluetoothTest.HUNTER;
             connected(mmSocket, mmDevice, mSocketType);
         }
 

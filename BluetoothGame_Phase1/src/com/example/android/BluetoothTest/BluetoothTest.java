@@ -19,7 +19,6 @@ package com.example.android.BluetoothTest;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Random;
-
 import com.crittercism.app.Crittercism;
 import com.example.android.BluetoothTest.GetHttp.OnPost;
 import com.example.android.BluetoothTest.R;
@@ -40,8 +39,8 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.UiSettings;
-
 import android.R.color;
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -60,6 +59,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.TransitionDrawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -67,6 +68,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;                    
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -85,7 +87,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
@@ -130,21 +131,15 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	// Layout Views
 	private ListView mConversationView;
 	// private EditText mOutEditText;
-	private static Button mTestButton;
+	private static Button mTestButton,mRoleButton,mBlinkButton;
 	private static Button mPlayButton;
 	static Button mResultButton;
 
 	private TextView mWarningText;
-	// Name of the connected device
 	private String mConnectedDeviceName = null;
-	// Array adapter for the conversation thread
-//	private ArrayAdapter<String> mConversationArrayAdapter;
-	// String buffer for outgoing messages
 	private StringBuffer mOutStringBuffer;
-	// Local Bluetooth adapter
 	private BluetoothAdapter mBluetoothAdapter = null;
 	private BluetoothDevice device;
-	// Member object for the chat services
 	private static BluetoothService mChatService = null;
 	private boolean localPlayIsPressed = false;
 	private boolean remotePlayIsPressed = false;
@@ -154,6 +149,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	public static boolean resetCommandIsTrue = false;
 	
 	GoogleMap mMap;
+	SupportMapFragment fm;
+	static View myview;
 	LocationManager locationManager ;
 	LocationListener locationListener;
 	static double myLong;
@@ -171,11 +168,20 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	int indexInfor =0;
 	
 	static GetHttp fightView;
-	public static Handler handle_update,handle_parse,handle_info,handle_shooting;
+	public static Handler handle_update,handle_blinkScreen,handle_info,handle_shooting;
 	static Boolean flag_channel = false;
 
 	TextView distanceText[] = new TextView[4];
 	TextView targetText[]= new TextView[4];
+
+	static int role = 0;
+	static int HUNTER = 1;
+	static int TARGET = 2;
+	static int NO_PLAY = 3;
+	
+	static Vibrator v_target;
+	static Boolean flag_vibra = false;
+	static Boolean flag_resultbtn = false;
 	
 
 	@Override
@@ -211,8 +217,20 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		handle_update = new Handler();
 		handle_info = new Handler();
 		handle_shooting = new Handler();
+		handle_blinkScreen = new Handler();
 		
+		myview = (View) findViewById(R.id.my_view);;
+		role = NO_PLAY;
+		flag_vibra = false;
 		String tokenId = "token";
+		targetId = 0;
+        GetHttp.choseTarget=false;
+        GetHttp.flag_update = false;
+        flag_channel = false;
+        showInfo=false;
+        zoomMap = false;
+        LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;	
+        
 		SharedPreferences pre=getSharedPreferences(tokenId,MODE_PRIVATE);
 		String s_token=pre.getString("token", "");
 		String s_id=pre.getString("id", "");
@@ -246,7 +264,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
         }
         else
         {
-        	SupportMapFragment fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapgame);
+        	fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapgame);
         	 
             // Getting GoogleMap object from the fragment
         	mMap = fm.getMap();        	
@@ -332,12 +350,15 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		mPlayButton.setBackgroundColor(0xFFFFFFFF);
 		mPlayButton.setVisibility(View.VISIBLE);
 		
-		mTestButton = (Button)findViewById(R.id.button_testServer);
+		mTestButton = (Button)findViewById(R.id.button_withdraw);
 		mTestButton.setBackgroundColor(0xFFFFFFFF);
 		mTestButton.setVisibility(View.INVISIBLE);
 		
 		mResultButton = (Button)findViewById(R.id.button_result);
 		mResultButton.setVisibility(View.INVISIBLE);
+		flag_resultbtn = false;
+//		mRoleButton = (Button)findViewById(R.id.button_role);
+//		mBlinkButton = (Button)findViewById(R.id.button_blink);
 		
 		
 	}
@@ -408,15 +429,18 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 								}
 								
 								locationManager.removeUpdates(locationListener);;
-								 targetId = 0;
+								targetId = 0;
 				                GetHttp.choseTarget=false;
 				                GetHttp.flag_update = false;
 				                flag_channel = false;
 				                showInfo=false;
 				                zoomMap = false;
+				                role = NO_PLAY;
+				                flag_vibra = false;
 				                LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;				                
 								handle_info.removeCallbacks(ShowInfor);
-								handle_shooting.removeCallbacks(updateStateButton);								
+								handle_shooting.removeCallbacks(updateStateButton);	
+								handle_blinkScreen.removeCallbacks(blinkingScreen);
 								Log.i(TAG, "front finish() menthod");
 								mChatService = null;
 								
@@ -457,6 +481,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						sendMessage(message);
 						
 						mResultButton.setVisibility(View.INVISIBLE);
+						mTestButton.setVisibility(View.INVISIBLE);
 					}
 					else
 					{
@@ -484,7 +509,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 								                flag_win = 1;
 								                flag_play = 0;
 								                targetId = 0;
+								                role = NO_PLAY;
 								                GetHttp.choseTarget=false;
+								                flag_resultbtn = false;
 								                
 								                mPlayButton.setText("Reset");
 								                mPlayButton.setBackgroundColor(0xFFFFFFFF);
@@ -568,6 +595,24 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                 }
 			}
 		});
+//		mRoleButton.setOnClickListener(new OnClickListener() {
+//			
+//			@Override
+//			public void onClick(View v) {
+//				// TODO Auto-generated method stub
+//				role = TARGET;
+//			}
+//		});
+//		mBlinkButton.setOnClickListener(new OnClickListener() {
+//			
+//			@SuppressLint("NewApi")
+//			@Override
+//			public void onClick(View v) {
+//				// TODO Auto-generated method stub
+//				handle_blinkScreen.postDelayed(blinkingScreen, 1000);
+//			}
+//		});
+		
 		// Initialize the BluetoothChatService to perform bluetooth connections
 		if(mChatService == null){
 			mChatService = new BluetoothService(this, mHandler);
@@ -576,6 +621,36 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		mOutStringBuffer = new StringBuffer("");
 	}
 
+	static int cnt_blink = 0;
+	static Runnable blinkingScreen = new Runnable() {
+		
+		@SuppressLint("NewApi")
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			Log.e("update", "- Update state button -");
+			Log.e("update", "targetId"+ targetId);
+			Log.e("update", "state bluetooth"+mChatService.getState());
+			ColorDrawable[] colorBlink = {new ColorDrawable(Color.parseColor("#000000")), new ColorDrawable(Color.parseColor("#FF0000"))};
+            TransitionDrawable trans = new TransitionDrawable(colorBlink);
+            myview.setBackground(trans);
+            trans.startTransition(200);
+            cnt_blink++;
+            if(cnt_blink<5)
+            {
+            	handle_blinkScreen.postDelayed(this, 500);
+            }
+            else 
+            {
+            	cnt_blink=0;
+            	myview.setBackground(null);;
+            	handle_blinkScreen.removeCallbacks(this);
+            }
+            
+		}
+		
+		
+	};
 	static int flag_checkTarget = 0;
 	static Runnable updateStateButton = new Runnable() {
 		
@@ -587,7 +662,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			Log.e("update", "state bluetooth"+mChatService.getState());
 			if ((mChatService.getState() != BluetoothService.STATE_CONNECTED)) {
 				mPlayButton.setBackgroundColor(0xFFFFFFFF);
-//				flag_play = 1;
 				flag_checkTarget = 0;
 				mResultButton.setVisibility(View.INVISIBLE);
 			}
@@ -599,7 +673,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			if(flag_checkTarget>3)
 			{
 				mPlayButton.setBackgroundColor(0xFFFF0000);
-//				flag_play = 0;
 				flag_shoot = 1;
 				flag_checkTarget = 4;
 			}
@@ -716,24 +789,62 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	private final Handler mHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
+//			if(BluetoothService.isServer== true && BluetoothService.isClient==false)
+//			{
+//				role = TARGET;
+//			}
+//			else if(BluetoothService.isServer== false && BluetoothService.isClient==true)
+//			{
+//				role = HUNTER;
+//			}
+			
 			switch (msg.what) {
+			
 			case MESSAGE_STATE_CHANGE:
 				if (D)
 					Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
 				switch (msg.arg1) {
 				case BluetoothService.STATE_CONNECTED:
-					setStatus(getString(R.string.title_connected_to,
-							mConnectedDeviceName));
-//					mConversationArrayAdapter.clear();
+//					setStatus(getString(R.string.title_connected_to,
+//							mConnectedDeviceName));
 					isConnected = true;
+					if(role==HUNTER)
+					{
+						setStatus(R.string.title_target_in);
+					}
+					else if(role==TARGET)
+					{
+						setStatus(R.string.title_hunter_in);
+					}
 					break;
 				case BluetoothService.STATE_CONNECTING:
 					isConnected = false;
-					setStatus(R.string.title_connecting);
+//					setStatus(R.string.title_connecting);
+					if(role==HUNTER)
+					{
+						setStatus(R.string.title_target_out);
+					}
+					else if(role==TARGET)
+					{
+						setStatus(R.string.title_hunter_out);
+					}
+
 					break;
 				case BluetoothService.STATE_LISTEN:
 					isConnected = false;
-					setStatus(R.string.title_listen);
+					mTestButton.setVisibility(View.INVISIBLE);
+					if(role==HUNTER)
+					{
+						setStatus(R.string.title_target_out);
+					}
+					else if(role==TARGET)
+					{
+						setStatus(R.string.title_hunter_out);
+					}
+					else
+					{
+						setStatus(R.string.title_no_play);
+					}
 					break;
 				case BluetoothService.STATE_NONE:
 					isConnected = false;
@@ -769,28 +880,24 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	                if(readMessage.equals("You die!") )
 	                {
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
-//		                mResultButton.setBackgroundDrawable(getResources().getDrawable(R.drawable.failure));
 		                mResultButton.setVisibility(View.VISIBLE);
 		                mResultButton.setText("YOU LOST");
 		                mResultButton.setTextColor(Color.parseColor("#0f1bb0"));
 		                mResultButton.setBackgroundColor(0x0000FFFF);
 		                
-		                mPlayButton.setText("Reset");
-//		                mPlayButton.setBackgroundColor(0xFFFFFFFF);
-//						mPlayButton.setText("PLAY");
-//						flag_shoot = 0;
-//						flag_play= 0;
-						
-//						mChatService.stop();
+		                handle_blinkScreen.postDelayed(blinkingScreen, 0);
 		                
+		                mPlayButton.setText("Reset");
 	                }
 	                if (readMessage.equals("new session") )
 	                {
 	                	Log.i("read", "MESSAGE_STATE_CHANGE: " + msg.arg1);
 	                	mResultButton.setVisibility(View.INVISIBLE);
+	                	mTestButton.setVisibility(View.INVISIBLE);
 	                	mChatService.reset();
 	                	resetCommandIsTrue = false;
 	                	mPlayButton.setText("PLAY");
+	                	
 	                }
 
 	                break;
@@ -860,33 +967,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		return true;
 	}
 
-	/*@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		Intent serverIntent = null;
-		switch (item.getItemId()) {
-		case R.id.secure_connect_scan:
-			if(isConnected == false){
-				// Launch the DeviceListActivity to see devices and do scan
-				serverIntent = new Intent(this, DeviceListActivity.class);
-				startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE_SECURE);
-				return true;	
-			} 
-			else {
-				Toast.makeText(getApplicationContext(),
-						"You are already connect to another device",
-						Toast.LENGTH_SHORT).show();
-			}
-			
-		case R.id.discoverable:
-			// Ensure this device is discoverable by others
-			ensureDiscoverable();
-			return true;
-		}
-		return false;
-	}*/
-
-
-	
 	public class MyLocationListener implements LocationListener {
 		@Override
 		public void onLocationChanged(Location location) {
@@ -1143,6 +1223,36 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				handle_shooting.post(updateStateButton);
 				flag_play = 1;
 			}
+			if(flag_resultbtn)
+			{
+				mResultButton.setVisibility(View.INVISIBLE);
+			}
+			if(role==TARGET && flag_vibra==false)
+			{
+				Log.e("vibrator","vibrator");
+				v_target = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+				 // Vibrate for 500 milliseconds
+				v_target.vibrate(2000);
+				flag_vibra = true;
+				
+				mResultButton.setVisibility(View.VISIBLE);
+                mResultButton.setText("YOU ARE TARGETED");
+                mResultButton.setTextColor(Color.parseColor("#0f1bb0"));
+//                if((mChatService.getState() == BluetoothService.STATE_CONNECTED))
+//                {
+//                	setStatus(R.string.title_hunter_in);
+//                }
+//                else
+//                	setStatus(R.string.title_hunter_out);
+                
+                flag_resultbtn = true;
+
+			}
+//			if(role==NO_PLAY)
+//			{
+//				setStatus(R.string.title_no_play);
+//			}
+			
              ////// set the interval time here
              handle_info.postDelayed(this,1000);
         }
@@ -1237,17 +1347,31 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 								{
 									GetHttp._detailStage[i] = GetHttp._FREE;
 									GetHttp._stage[i] = GetHttp.FREE;
+									if(i==LoginActivity.id)
+									{
+										flag_vibra = false;
+										role = NO_PLAY;
+									}
 									
 								}
 								else if(result.substring(GetHttp.StageIndex[i]+8,index).equals("be_targeted"))
 								{
 									GetHttp._stage[i]=GetHttp.NOT_FREE;
-									GetHttp._detailStage[i] = GetHttp._BE_TARGETED;
+									GetHttp._detailStage[i] = GetHttp._BE_TARGETED;	
+									if(i==LoginActivity.id)
+									{
+										role = TARGET;
+									}
 								}
 								else if(result.substring(GetHttp.StageIndex[i]+8,index).equals("hunting"))
 								{
 									GetHttp._stage[i]=GetHttp.NOT_FREE;
 									GetHttp._detailStage[i] = GetHttp._HUNTING;
+									if(i==LoginActivity.id)
+									{
+										role = HUNTER;
+									}
+									
 								}
 								Log.d("post", "Stage_player"+i+":"+GetHttp._detailStage[i]);
 							}
@@ -1268,10 +1392,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						{
 							if(GetHttp.BTAddressIndex[i]!=-1)
 							{
-//								index=result.indexOf("\"",GetHttp.BTAddressIndex[i]+20);
-//								Log.d("address","\n BTAddress index"+i+":"+result.substring(GetHttp.BTAddressIndex[i]+20,index));
-//								GetHttp._BTAddress[i]=result.substring(GetHttp.BTAddressIndex[i]+20,index);
-//								Log.d("post", "BTAddress_player"+i+":"+GetHttp._BTAddress[i]);
 								index=result.indexOf(",",GetHttp.BTAddressIndex[i]+19);
 								if(!result.substring(GetHttp.BTAddressIndex[i]+19,index).equals("null"))
 								{
@@ -1365,7 +1485,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 																Log.d("fight","target id:"+targetId);
 																device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
 																mChatService.connect(device, true);
-																
+																role=HUNTER;
 																mTestButton.setVisibility(View.VISIBLE);
 																Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show();
 															}
@@ -1382,11 +1502,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 									});
 							AlertDialog alert = builder.create();
 							alert.show();				
-							
-							
-							
-							
-							
+						
 						}
 						else
 						{

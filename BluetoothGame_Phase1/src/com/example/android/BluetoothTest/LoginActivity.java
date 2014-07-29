@@ -43,7 +43,7 @@ public class LoginActivity extends Activity {
 	private static final String TAG = "Login";
 	private static final boolean D = true;
 	
-	public static int flag_debug = 1;
+	public static int flag_debug = 0;
 	public static String token="";
 	public static int id=0;
 	static String resultLogin = "";
