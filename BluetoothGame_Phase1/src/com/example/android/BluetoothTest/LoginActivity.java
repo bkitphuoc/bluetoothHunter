@@ -127,7 +127,7 @@ public class LoginActivity extends Activity {
 					new PostHttp().execute("");
 					startActivity(new Intent(LoginActivity.this,
 							CircleProgressBar.class));
-					finish();
+//					finish();
 				}
                 
 			}

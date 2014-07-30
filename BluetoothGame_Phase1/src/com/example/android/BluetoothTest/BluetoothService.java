@@ -109,7 +109,7 @@ public class BluetoothService {
         {
         	BluetoothTest.role = BluetoothTest.HUNTER;
         }
-        else if(state==STATE_LISTEN||state==STATE_LISTEN)
+        else if(state==STATE_LISTEN||state==STATE_NONE)
         {
         	BluetoothTest.role = BluetoothTest.NO_PLAY;
         }
@@ -312,7 +312,7 @@ public class BluetoothService {
     	
         isServer = true;
         isClient = false;
-        BluetoothTest.role = BluetoothTest.NO_PLAY;
+//        BluetoothTest.role = BluetoothTest.NO_PLAY;
     	// Bach
 //    	isServer = false;
 //        isClient = false;

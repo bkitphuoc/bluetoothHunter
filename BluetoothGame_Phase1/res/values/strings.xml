@@ -24,18 +24,20 @@
     <string name="test">Withdraw</string>
     <string name="role">TestRole</string>
     <string name="blink">Blink</string>
-    <string name="not_connected">Be not connected to a device. </string>
+    <string name="not_connected">Out of range. </string>
+     <string name="not_joinGame">You are not hunter or target</string>
     <string name="not_target">Not choose target. </string>
     <string name="bt_not_enabled_leaving">Bluetooth was not enabled. Leaving Bluetooth Test.</string>
     <string name="title_connecting">out of range</string>
-    <string name="title_no_play">not play</string>
+    <string name="title_no_play">no play</string>
     <string name="title_connected_to">in range </string>
-    <string name="title_not_connected">no play</string>
+<!--     <string name="title_not_connected">no play</string> -->
 
     <string name="title_hunter_out">Hunter is out of range</string>
     <string name="title_hunter_in">Hunter is in range</string>
     <string name="title_target_out">Target is out of range </string>
     <string name="title_target_in">Target is in range</string>
+   
     
     <!--  DeviceListActivity -->
     <string name="scanning">scanning for devices...</string>

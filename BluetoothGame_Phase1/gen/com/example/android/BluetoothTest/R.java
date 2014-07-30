@@ -188,45 +188,51 @@ containing a value of this type.
         public static final int UserText=0x7f050014;
         public static final int account=0x7f050013;
         public static final int address=0x7f050009;
+        public static final int blank=0x7f05002a;
         public static final int btnJoinGame=0x7f050011;
-        public static final int btnRegister=0x7f05002a;
+        public static final int btnRegister=0x7f050030;
         public static final int btnReq=0x7f050012;
         public static final int btnSignIn=0x7f050016;
         public static final int btnSignUp=0x7f050017;
         public static final int button_ok=0x7f05000f;
-        public static final int button_play=0x7f05001d;
-        public static final int button_result=0x7f05001a;
+        public static final int button_play=0x7f05001e;
+        public static final int button_result=0x7f05001b;
         public static final int button_scan=0x7f05000e;
-        public static final int button_withdraw=0x7f05001b;
+        public static final int button_withdraw=0x7f05001c;
         public static final int checkBox1=0x7f050008;
         public static final int circlePB=0x7f050005;
-        public static final int distance_1=0x7f050020;
-        public static final int distance_2=0x7f050022;
-        public static final int distance_3=0x7f050024;
-        public static final int distance_4=0x7f050026;
+        public static final int distance_1=0x7f050023;
+        public static final int distance_2=0x7f050025;
+        public static final int distance_3=0x7f050027;
+        public static final int distance_4=0x7f050029;
         public static final int hybrid=0x7f050004;
-        public static final int linearLayout1=0x7f05001c;
-        public static final int link_to_login=0x7f05002b;
+        public static final int layoutDisGps=0x7f050020;
+        public static final int linearLayout1=0x7f05001d;
+        public static final int linearLayout2=0x7f05001a;
+        public static final int link_to_login=0x7f050031;
         public static final int mapgame=0x7f050018;
         public static final int my_view=0x7f050019;
         public static final int new_devices=0x7f05000d;
         public static final int none=0x7f050000;
         public static final int normal=0x7f050001;
         public static final int paired_devices=0x7f05000b;
-        public static final int reg_email=0x7f050028;
-        public static final int reg_fullname=0x7f050027;
-        public static final int reg_password=0x7f050029;
+        public static final int reg_email=0x7f05002e;
+        public static final int reg_fullname=0x7f05002d;
+        public static final int reg_password=0x7f05002f;
+        public static final int rssi=0x7f05002b;
         public static final int satellite=0x7f050002;
-        public static final int target_1=0x7f05001f;
-        public static final int target_2=0x7f050021;
-        public static final int target_3=0x7f050023;
-        public static final int target_4=0x7f050025;
+        public static final int target_1=0x7f050022;
+        public static final int target_2=0x7f050024;
+        public static final int target_3=0x7f050026;
+        public static final int target_4=0x7f050028;
         public static final int terrain=0x7f050003;
-        public static final int textDis=0x7f05001e;
+        public static final int textDis=0x7f050021;
         public static final int title_left_text=0x7f050006;
         public static final int title_new_devices=0x7f05000c;
         public static final int title_paired_devices=0x7f05000a;
         public static final int title_right_text=0x7f050007;
+        public static final int value=0x7f05001f;
+        public static final int valuerssi=0x7f05002c;
     }
     public static final class layout {
         public static final int circle_progress_bar=0x7f030000;
@@ -270,7 +276,7 @@ containing a value of this type.
          */
         public static final int auth_client_using_bad_version_title=0x7f060013;
         public static final int blink=0x7f06001f;
-        public static final int bt_not_enabled_leaving=0x7f060022;
+        public static final int bt_not_enabled_leaving=0x7f060023;
         public static final int button_ok=0x7f060032;
         public static final int button_scan=0x7f060031;
         /**  Button in confirmation dialog to enable Google Play services.  Clicking it
@@ -347,7 +353,8 @@ containing a value of this type.
         public static final int none_found=0x7f06002e;
         public static final int none_paired=0x7f06002d;
         public static final int not_connected=0x7f060020;
-        public static final int not_target=0x7f060021;
+        public static final int not_joinGame=0x7f060021;
+        public static final int not_target=0x7f060022;
         public static final int play=0x7f06001c;
         public static final int role=0x7f06001e;
         /**   DeviceListActivity 
@@ -361,12 +368,13 @@ containing a value of this type.
          */
         public static final int send=0x7f06001b;
         public static final int test=0x7f06001d;
-        public static final int title_connected_to=0x7f060025;
-        public static final int title_connecting=0x7f060023;
+        public static final int title_connected_to=0x7f060026;
+        public static final int title_connecting=0x7f060024;
         public static final int title_hunter_in=0x7f060028;
+        /**      <string name="title_not_connected">no play</string> 
+         */
         public static final int title_hunter_out=0x7f060027;
-        public static final int title_no_play=0x7f060024;
-        public static final int title_not_connected=0x7f060026;
+        public static final int title_no_play=0x7f060025;
         public static final int title_other_devices=0x7f060030;
         public static final int title_paired_devices=0x7f06002f;
         public static final int title_target_in=0x7f06002a;
