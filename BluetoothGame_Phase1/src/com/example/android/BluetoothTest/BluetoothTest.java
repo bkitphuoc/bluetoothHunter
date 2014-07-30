@@ -595,20 +595,28 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 							    					{
 							    						Log.d("result","You lose");
 							    					}
-							    					if (mChatService.getState() == BluetoothService.STATE_CONNECTED){
-														sendMessage("I press back");
-													}
-													else {
-														mChatService.stop();
-													}
-							    					
-							    					if (mChatService.getState() == BluetoothService.STATE_NONE){
-														mChatService.start();
-													}
-							    					flag_shoot = 0;
-									                flag_win = 1;
-									                flag_play = 0;
-									                targetId = 0;
+							    					//
+//							    					if (mChatService.getState() == BluetoothService.STATE_CONNECTED){
+//														sendMessage("I press back");
+//													}
+//													else {
+//														mChatService.stop();
+//													}
+//							    					
+//							    					if (mChatService.getState() == BluetoothService.STATE_NONE){
+//														mChatService.start();
+//													}
+//							    					flag_shoot = 0;
+//									                flag_win = 1;
+//									                flag_play = 0;
+//									                targetId = 0;
+									                //
+									                //
+									                resetCommandIsTrue = true;
+													String message = "new session";
+													sendMessage = message;
+													sendMessage(message);
+									                //
 									                GetHttp.choseTarget=false;
 							    					mTestButton.setVisibility(View.INVISIBLE);
 							    				}
