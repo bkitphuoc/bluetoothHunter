@@ -168,6 +168,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	Marker Target;
 	private Marker[] MarkerArr = new Marker[11];
 	Boolean[] validMarker = new Boolean[11];
+	LatLng pre_LatLng;
 	String address = "";
 	static int targetId=0;
 	Boolean zoomMap = false;
@@ -346,6 +347,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                  locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);	
             }
         }
+        pre_LatLng = new LatLng(0,0);
 //		 Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		// If the adapter is null, then Bluetooth is not supported
@@ -1063,6 +1065,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	        {
 	        	mMap.clear();
 	        	LatLng[] latLngArr = new LatLng[11];
+	        	
 	        	for(int index=_startIndex;index<_endIndex;index++)
 	        	{
 	        		if(index!=LoginActivity.id)
@@ -1128,6 +1131,11 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						{
 							if(!latLngArr[index].equals(new LatLng(0,0)))
 							{
+								
+								if(!pre_LatLng.equals(new LatLng(0,0)))
+								{
+									
+								}
 								targetText[j].setTextColor(Color.parseColor("#ff0000"));
 								targetText[j].setText("My target:");
 								locationB.setLatitude(latLngArr[index].latitude);
@@ -1137,6 +1145,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						        distance[j] = locationA.distanceTo(locationB); 
 						        distanceText[j].setTextColor(Color.parseColor("#ff0000"));
 						        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
+						        
+						        pre_LatLng.equals(latLngArr[index]);
+						        
 						        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
 							}
 						}
@@ -1283,7 +1294,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			{
 				Log.e("vibrator","vibrator");
 				v_target = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-				 // Vibrate for 500 milliseconds
+				 // Vibrate for 1000 milliseconds
 				v_target.vibrate(2000);
 				flag_vibra = true;
 				
@@ -1512,7 +1523,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				// must waiting update latest state of player
 				if(flag_play_update==UNCOMPLETED)
 				{
-					Toast.makeText(getBaseContext(),"Please wait update from server", Toast.LENGTH_LONG).show();
+					Toast.makeText(getBaseContext(),"Please wait update info from server", Toast.LENGTH_LONG).show();
 				}
 				else
 				{
