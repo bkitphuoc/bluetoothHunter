@@ -17,6 +17,8 @@
 package com.example.android.BluetoothTest;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Random;
 
@@ -39,6 +41,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.UiSettings;
 
 import android.R.color;
@@ -63,6 +67,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.location.Criteria;
@@ -72,6 +77,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;                    
+import android.os.StrictMode;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
@@ -606,10 +612,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 //							    					if (mChatService.getState() == BluetoothService.STATE_NONE){
 //														mChatService.start();
 //													}
-//							    					flag_shoot = 0;
-//									                flag_win = 1;
-//									                flag_play = 0;
-//									                targetId = 0;
+							    					flag_shoot = 0;
+									                flag_win = 1;
+									                flag_play = 0;
+ 				                targetId = 0;
 									                //
 									                //
 									                resetCommandIsTrue = true;
@@ -1068,6 +1074,12 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	        BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
 	        BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
 	        
+	        PolylineOptions line3 = new PolylineOptions();
+			line3.add(new LatLng(51.5, -0.1), new LatLng(40.7, -74.0)).color(Color.RED).width(2);
+			mMap.addPolyline(line3);
+
+			DrawArrowHead(mMap, new LatLng(51.5, -0.1), new LatLng(40.7, -74.0));
+			
 	        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
 	        if(GetHttp.flag_update==true)
 	        {
@@ -1139,9 +1151,16 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						{
 							if(!latLngArr[index].equals(new LatLng(0,0)))
 							{
-								
+								Log.e(" previous location target","pre:"+pre_LatLng.latitude+","+pre_LatLng.longitude);
 								if(!pre_LatLng.equals(new LatLng(0,0)))
 								{
+									Log.e("draw line","draw line");
+									
+									PolylineOptions polylines = new PolylineOptions();
+									polylines.add(pre_LatLng, latLngArr[index]).color(Color.RED).width(2);
+									mMap.addPolyline(polylines);
+
+									DrawArrowHead(mMap, pre_LatLng, latLngArr[index]);
 									
 								}
 								targetText[j].setTextColor(Color.parseColor("#ff0000"));
@@ -1155,7 +1174,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
 						        
 						        pre_LatLng.equals(latLngArr[index]);
-						        
+						        Log.e(" current location target","cur:"+pre_LatLng.latitude+","+pre_LatLng.longitude);
 						        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
 							}
 						}
@@ -1175,6 +1194,11 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 							        distanceText[j].setTextColor(Color.parseColor("#0000ff"));
 							        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
 							        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
+							        
+							        if(LoginActivity.id == index)
+							        {
+							        	pre_LatLng = new LatLng(0,0);
+							        }
 								}
 								else
 								{
@@ -1189,6 +1213,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 							        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
 							        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
 								}
+//								pre_LatLng = new LatLng(0,0);
 							}
 						}
 				        j++;
@@ -1238,7 +1263,132 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		}
 		
 	   
-			
+		private final double degreesPerRadian = 180.0 / Math.PI;	
+		private void DrawArrowHead(GoogleMap mMap, LatLng from, LatLng to){
+		    // obtain the bearing between the last two points
+		    double bearing = GetBearing(from, to);
+
+		    // round it to a multiple of 3 and cast out 120s
+		    double adjBearing = Math.round(bearing / 3) * 3;
+		    while (adjBearing >= 120) {
+		        adjBearing -= 120;
+		    }
+
+		    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+		    StrictMode.setThreadPolicy(policy); 
+
+		    // Get the corresponding triangle marker from Google        
+		    URL url;
+		    Bitmap image = null;
+
+		    try {
+		        url = new URL("http://www.google.com/intl/en_ALL/mapfiles/dir_" + String.valueOf((int)adjBearing) + ".png");
+		        try {
+		            image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+		        } catch (IOException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        }
+		    } catch (MalformedURLException e) {
+		        // TODO Auto-generated catch block
+		        e.printStackTrace();
+		    }
+
+		    if (image != null){
+
+		        // Anchor is ratio in range [0..1] so value of 0.5 on x and y will center the marker image on the lat/long
+		        float anchorX = 0.5f;
+		        float anchorY = 0.5f;
+
+		        int offsetX = 0;
+		        int offsetY = 0;
+
+		        // images are 24px x 24px
+		        // so transformed image will be 48px x 48px
+
+		        //315 range -- 22.5 either side of 315
+		        if (bearing >= 292.5 && bearing < 335.5){
+		            offsetX = 24;
+		            offsetY = 24;
+		        }
+		        //270 range
+		        else if (bearing >= 247.5 && bearing < 292.5){
+		            offsetX = 24;
+		            offsetY = 12;
+		        }
+		        //225 range
+		        else if (bearing >= 202.5 && bearing < 247.5){
+		            offsetX = 24;
+		            offsetY = 0;
+		        }
+		        //180 range
+		        else if (bearing >= 157.5 && bearing < 202.5){
+		            offsetX = 12;
+		            offsetY = 0;
+		        }
+		        //135 range
+		        else if (bearing >= 112.5 && bearing < 157.5){
+		            offsetX = 0;
+		            offsetY = 0;
+		        }
+		        //90 range
+		        else if (bearing >= 67.5 && bearing < 112.5){
+		            offsetX = 0;
+		            offsetY = 12;
+		        }
+		        //45 range
+		        else if (bearing >= 22.5 && bearing < 67.5){
+		            offsetX = 0;
+		            offsetY = 24;
+		        }
+		        //0 range - 335.5 - 22.5
+		        else {
+		            offsetX = 12;
+		            offsetY = 24;
+		        }
+
+		        Bitmap wideBmp;
+		        Canvas wideBmpCanvas;
+		        Rect src, dest;
+
+		        // Create larger bitmap 4 times the size of arrow head image
+		        wideBmp = Bitmap.createBitmap(image.getWidth() * 2, image.getHeight() * 2, image.getConfig());
+
+		        wideBmpCanvas = new Canvas(wideBmp); 
+
+		        src = new Rect(0, 0, image.getWidth(), image.getHeight());
+		        dest = new Rect(src); 
+		        dest.offset(offsetX, offsetY); 
+
+		        wideBmpCanvas.drawBitmap(image, src, dest, null);
+
+		        mMap.addMarker(new MarkerOptions()
+		        .position(to)
+		        .icon(BitmapDescriptorFactory.fromBitmap(wideBmp))
+		        .anchor(anchorX, anchorY));
+		    }
+		}
+
+		private double GetBearing(LatLng from, LatLng to){
+		    double lat1 = from.latitude * Math.PI / 180.0;
+		    double lon1 = from.longitude * Math.PI / 180.0;
+		    double lat2 = to.latitude * Math.PI / 180.0;
+		    double lon2 = to.longitude * Math.PI / 180.0;
+
+		    // Compute the angle.
+		    double angle = - Math.atan2( Math.sin( lon1 - lon2 ) * Math.cos( lat2 ), Math.cos( lat1 ) * Math.sin( lat2 ) - Math.sin( lat1 ) * Math.cos( lat2 ) * Math.cos( lon1 - lon2 ) );
+
+		    if (angle < 0.0)
+		        angle += Math.PI * 2.0;
+
+		    // And convert result to degrees.
+		    angle = angle * degreesPerRadian;
+
+		    return angle;
+		}
+
+
+
 		@Override
 		public void onProviderDisabled(String provider) {
 			// TODO Auto-generated method stub
