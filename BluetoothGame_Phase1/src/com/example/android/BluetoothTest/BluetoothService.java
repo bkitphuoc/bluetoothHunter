@@ -555,7 +555,7 @@ public class BluetoothService {
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     
-                    if(disableReConnect == false || BluetoothTest.resetCommandIsTrue == false){
+                    if(!(disableReConnect == true || BluetoothTest.resetCommandIsTrue == true)){
                         if(isServer == true){
                         	connectionLostAsServer();
                         }
