@@ -17,6 +17,10 @@
 package com.example.android.BluetoothTest;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Random;
 
@@ -39,6 +43,8 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.UiSettings;
 
 import android.R.color;
@@ -63,6 +69,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Paint.Style;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.location.Criteria;
@@ -72,6 +79,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;                    
+import android.os.StrictMode;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
@@ -103,6 +111,10 @@ import org.apache.http.client.*;
 import org.apache.http.impl.client.*;
 import org.apache.http.*;
 import org.apache.http.util.*;
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * This is the main Activity that displays the current chat session.
@@ -157,6 +169,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	static Boolean flag_vibra = false;
 	static Boolean flag_resultbtn = false;
 	static Boolean flag_channel = false;
+	static Boolean flag_proc_mess = false;
 	
 	// variable
 	private String mConnectedDeviceName = null;
@@ -185,18 +198,41 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	Marker Target;
 	private Marker[] MarkerArr = new Marker[11];
 	Boolean[] validMarker = new Boolean[11];
+	LatLng pre_LatLng;
 	String address = "";
+
 	
 	static GetHttp fightView;
 	public static Handler handle_update,handle_blinkScreen,handle_info,handle_shooting;
 
 	TextView distanceText[] = new TextView[4];
 	TextView targetText[]= new TextView[4];
+	TextView newTarget; 
 
+	
 	static Vibrator v_target;
 
-	public void initialization(){
-		
+
+	int socNONE = 0;
+	int socLOGIN = 1;
+	int socTRACKING = 2;
+	int socFIGHT = 3;
+	int socHIT = 4;
+	int socWITHDRAW = 5;
+	int socFAIL = 6;
+	private WebSocketClient mWebSocketClient;
+    static String message;
+    int flag_type = socNONE;
+    int flag_login = 0;
+    int isTracking = 0;
+    String type_subscribe = "subscribe";
+	String type_tracking = "tracking";
+	String type_fight ="fight";
+	String type_hit="hit";
+	String type_withdraw = "withdraw";
+	String type_value="";
+	
+  	public void initialization(){		
 		//flag
 		flag_play = 0;
 		flag_shoot = 0;
@@ -225,12 +261,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			mChatService.stop();
 			mChatService = null;
 		}
-	}
-	
+	}  
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
 //		ACRA.init(this);
 		if (D)
 			Log.e(TAG, "+++ ON CREATE +++");
@@ -340,7 +374,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
             boolean enabled = service
               .isProviderEnabled(LocationManager.GPS_PROVIDER);
 
-            // check if enabled and if not send user to the GSP settings
+         // check if enabled and if not send user to the GSP settings
             // Better solution would be to display a dialog and suggesting to 
             // go to the settings
             if (!enabled) {
@@ -351,7 +385,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                 alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
                 // On pressing Settings button
                 alertDialog.setPositiveButton("Settings", new 
-
                            DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog,int which) {
                         Intent intent = new 
@@ -372,22 +405,25 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                 // Showing Alert Message
                 alertDialog.show();
               
-            } 
+            }
             else
             {
-            	String provider = locationManager.getBestProvider(criteria, true);
-            	Location loc = locationManager.getLastKnownLocation(provider);
-            	 if(loc!=null){
-                     locationListener.onLocationChanged(loc);
-                 }
-            	 else
-            	 {
-                     Toast.makeText(getBaseContext(), "No location found", Toast.LENGTH_SHORT).show();
-            	 }
-                 locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-                 locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);	
+
+		    	String provider = locationManager.getBestProvider(criteria, true);
+		    	Location loc = locationManager.getLastKnownLocation(provider);
+		    	 if(loc!=null){
+		             locationListener.onLocationChanged(loc);
+		         }
+		    	 else
+		    	 {
+		             Toast.makeText(getBaseContext(), "No location found", Toast.LENGTH_SHORT).show();
+		    	 }
+		         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
             }
+
         }
+        pre_LatLng = new LatLng(0,0);
 //		 Get local Bluetooth adapter
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		// If the adapter is null, then Bluetooth is not supported
@@ -417,8 +453,712 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		rssi_value = (TextView) findViewById(R.id.valuerssi);
 //		mRoleButton = (Button)findViewById(R.id.button_role);
 //		mBlinkButton = (Button)findViewById(R.id.button_blink);
+
+		flag_login = 0;
+		flag_type = socNONE;
+		connectWebSocket();
 		
-		
+	}
+
+	private void connectWebSocket() {
+		// TODO Auto-generated method stub
+
+        URI uri;
+        try {
+            uri = new URI("ws://54.255.184.201:7778/");
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        mWebSocketClient = new WebSocketClient(uri) {
+            @Override
+            public void onOpen(ServerHandshake serverHandshake) {
+            	flag_type = socLOGIN;
+        		mWebSocketClient.send("{\"type\":\"subscribe\",\"_token\":\""+LoginActivity.token+"\"}");
+        		isTracking = 1;
+            }
+
+            @Override
+            public void onMessage(String s) {
+            	if(flag_proc_mess==false)
+            	{
+            		message = s;
+            	}
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                    	Log.e("all","all type"+message);
+                    	flag_proc_mess = true;
+                    	int temp = 0;
+                    	int temp_hunter=0;
+                    	int temp_target=0;
+                    	int index_type_value = 0;
+                    	int index_type = message.indexOf("type");                    	
+                    	index_type_value=message.indexOf("\"",index_type+7);
+                    	type_value = message.substring(index_type+7,index_type_value);
+                    	if(type_value.equals(type_subscribe))
+                    	{
+                    		Log.d("socket","Subscribe:"+message);
+                    		flag_type = socLOGIN;
+                    		String _id_value="";
+                    		int _index = message.indexOf("id");
+                    		int _index1 = 0;
+                    		if(_index!=-1)
+                    		{
+                    			_index1 = message.indexOf("\"", _index+5);
+                    			_id_value = message.substring(_index+5, _index1);
+                    			
+                    			temp = Integer.parseInt(_id_value);
+                    			Log.e("new user","new user:"+temp);
+                    			if((temp!=LoginActivity.id)&& (temp>=_startIndex) && (temp<_endIndex))
+                    			{
+                    				Log.e("subscribe","-----------Enter---------------");
+                    				String stage ="stage";
+                					String address="bluetooth_address";
+                					String pos = "position";
+                					
+                					int index = message.indexOf(pos);
+                					int index1 = 0;
+                					int i = 1;
+                					if(index!=-1)
+                					{
+                						GetHttp.PosIndex[temp]=index;
+                					}
+                					
+                					index = message.indexOf(stage);
+                					if(index!=-1)
+                					{
+                						GetHttp.StageIndex[temp]=index;
+                					}
+                					index = message.indexOf(address);
+                					if(index!=-1)
+                					{
+                						GetHttp.BTAddressIndex[temp]=index;
+                					}
+                					GetHttp._Online[temp]=true;
+                					
+                					if(!message.substring(GetHttp.PosIndex[temp]+10,GetHttp.PosIndex[temp]+14).equals("null"))
+    								{
+    									
+    									index=message.indexOf("\"",GetHttp.PosIndex[temp]+23);
+    									GetHttp._Lat[temp]=message.substring(GetHttp.PosIndex[temp]+23,index);
+    									index1 = index+15;
+    									index = message.indexOf("\"",index1);
+    									GetHttp._Long[temp]=message.substring(index1,index);
+    									
+    									Log.d("post", "Lat_player"+temp+":"+GetHttp._Lat[temp]);
+    									Log.d("post", "Long_player"+temp+":"+GetHttp._Long[temp]);
+    								}
+    								else
+    								{
+    									GetHttp._Lat[temp]="null";
+    									GetHttp._Long[temp]="null";
+    								}
+                					
+                					if(GetHttp.StageIndex[temp]!=-1)
+        							{
+        								Log.d("status","\n stage index"+temp+":"+message.substring(GetHttp.StageIndex[temp]+8,GetHttp.StageIndex[temp]+12));
+        								index = message.indexOf("\"",GetHttp.StageIndex[temp]+8);
+        								if(message.substring(GetHttp.StageIndex[temp]+8,index).equals("free"))
+        								{
+        									GetHttp._detailStage[temp] = GetHttp._FREE;
+        									GetHttp._stage[temp] = GetHttp.FREE;
+        									
+        								}
+        								
+        								Log.d("post", "Stage_player"+temp+":"+GetHttp._detailStage[temp]);
+        							}
+                					
+                					if(GetHttp.BTAddressIndex[temp]!=-1)
+        							{
+        								index=message.indexOf(",",GetHttp.BTAddressIndex[temp]+19);
+        								if(!message.substring(GetHttp.BTAddressIndex[temp]+19,index).equals("null"))
+        								{
+        									index=message.indexOf("\"",GetHttp.BTAddressIndex[temp]+20);
+        									Log.d("address","\n BTAddress index"+temp+":"+message.substring(GetHttp.BTAddressIndex[temp]+20,index));
+        									GetHttp._BTAddress[temp]=message.substring(GetHttp.BTAddressIndex[temp]+20,index);
+        								}
+        								else
+        								{
+        									GetHttp._BTAddress[temp]="null";
+        									Log.d("address","\n BTAddress index"+temp+":"+message.substring(GetHttp.BTAddressIndex[temp]+19,index));
+        								}
+        								Log.d("post", "BTAddress_player"+temp+":"+GetHttp._BTAddress[temp]);
+        							}
+                    			}
+                    			else
+                    				{
+                    					for(int index=_startIndex;index<_endIndex;index++)
+                    					{
+                    						validMarker[index]=false;
+                    					}
+                    				
+                    				}
+                    		}
+        					flag_channel = false;
+        					GetHttp.flag_update = true;
+        					flag_play_update = COMPLETED;
+                    	
+                     	
+                    	}
+                    	else if(type_value.equals(type_tracking))
+                    	{
+
+                    		Log.d("socket","Tracking:"+message);
+                    		flag_type = socTRACKING;
+        					String stage ="stage";
+        					String address="bluetooth_address";
+        					String pos = "position";
+        					String onl = "is_online";
+
+        					int index = message.indexOf(pos);
+        					int index1 = 0;
+        					int i = 1;
+        					while(index!=-1)
+        					{
+        						Log.e("status", "++ STATUS ++");
+        						GetHttp.PosIndex[i]=index;
+        					    Log.d("status","\n position index"+i+":"+index);
+        					    index = message.indexOf(pos, index + 1);			    
+        					    i++;
+        					}
+        					index = message.indexOf(stage);
+        					i=1;
+        					while(index != -1) {
+        						Log.e("status", "++ STATUS ++");
+        						GetHttp.StageIndex[i]=index;
+        					    Log.d("status","\n stage index"+i+":"+index);
+        					    index = message.indexOf(stage, index + 1);			    
+        					    i++;
+        					}
+        					index = message.indexOf(address);
+        					i=1;
+        					while(index != -1) {
+        						Log.e("address", "++ Bluetooth Address ++");
+        						GetHttp.BTAddressIndex[i]=index;
+        					    Log.d("address","\n Bluetooth Address index"+i+":"+index);
+        					    index = message.indexOf(address, index + 1);			    
+        					    i++;
+        					}
+        					index = message.indexOf(onl);
+        					i=1;
+        					while(index != -1) {
+        						Log.e("online", "++ Online state ++");
+        						GetHttp.OnlineIndex[i]=index;
+        					    Log.d("online","\n Online index"+i+":"+index);
+        					    index = message.indexOf(onl, index + 1);			    
+        					    i++;
+        					}
+        					for(i=_startIndex;i<_endIndex;i++)
+        					{
+        						
+        						if(i!= LoginActivity.id)
+        						{
+        							if(GetHttp.OnlineIndex[i]!=-1)
+        							{
+        								index=message.indexOf("\"",GetHttp.OnlineIndex[i]+12);
+        								Log.d("post", "online value"+i+":"+index);
+        								Log.d("post", "online value"+i+":"+message.substring(GetHttp.OnlineIndex[i]+12,GetHttp.OnlineIndex[i]+13));
+//        								if(!message.substring(GetHttp.BTAddressIndex[i]+12,index).equals("1"))
+        								if(message.substring(GetHttp.OnlineIndex[i]+12,GetHttp.OnlineIndex[i]+13).equals("1"))
+        								{
+        									GetHttp._Online[i]=true;
+        								}
+        								else
+        								{
+        									GetHttp._Online[i]=false;
+        								}
+        								Log.d("post", "online state"+i+":"+GetHttp._Online[i]);
+        							}
+        						}
+        					}
+        					for(i=_startIndex;i<_endIndex;i++)
+        					{
+        						if(i!= LoginActivity.id)
+        						{
+        							if(GetHttp.PosIndex[i+1]!=-1)
+        							{
+        								Log.d("status","\n Postion index"+i+":"+message.substring(GetHttp.PosIndex[i+1]+10,GetHttp.PosIndex[i+1]+14));
+        								if(!message.substring(GetHttp.PosIndex[i+1]+10,GetHttp.PosIndex[i+1]+14).equals("null"))
+        								{
+        									
+        									index=message.indexOf("\"",GetHttp.PosIndex[i+1]+23);
+        									GetHttp._Lat[i]=message.substring(GetHttp.PosIndex[i+1]+23,index);
+        									index1 = index+15;
+        									index = message.indexOf("\"",index1);
+        									GetHttp._Long[i]=message.substring(index1,index);
+        									
+        									Log.d("post", "Lat_player"+i+":"+GetHttp._Lat[i]);
+        									Log.d("post", "Long_player"+i+":"+GetHttp._Long[i]);
+        								}
+        								else
+        								{
+        									GetHttp._Lat[i]="null";
+        									GetHttp._Long[i]="null";
+        								}
+        								
+        							}
+        						}
+        					}
+        					
+        				
+        					for(i=_startIndex;i<_endIndex;i++)
+        					{
+//        						if(i!=LoginActivity.id)
+        						{
+        							if(GetHttp.StageIndex[i]!=-1)
+        							{
+        								Log.d("status","\n stage index"+i+":"+message.substring(GetHttp.StageIndex[i]+8,GetHttp.StageIndex[i]+12));
+        								index = message.indexOf("\"",GetHttp.StageIndex[i]+8);
+        								if(message.substring(GetHttp.StageIndex[i]+8,index).equals("free"))
+        								{
+        									GetHttp._detailStage[i] = GetHttp._FREE;
+        									GetHttp._stage[i] = GetHttp.FREE;
+        									if(i==LoginActivity.id)
+        									{
+        										flag_vibra = false;
+        										role = NO_PLAY;
+        										
+        										if(mTestButton.getVisibility()==View.VISIBLE)
+        											mTestButton.setVisibility(View.INVISIBLE);
+        									}
+        									
+        									
+        								}
+        								else if(message.substring(GetHttp.StageIndex[i]+8,index).equals("be_targeted"))
+        								{
+        									GetHttp._stage[i]=GetHttp.NOT_FREE;
+        									GetHttp._detailStage[i] = GetHttp._BE_TARGETED;	
+        									if(i==LoginActivity.id)
+        									{
+        										role = TARGET;
+        									}
+        								}
+        								else if(message.substring(GetHttp.StageIndex[i]+8,index).equals("hunting"))
+        								{
+        									GetHttp._stage[i]=GetHttp.NOT_FREE;
+        									GetHttp._detailStage[i] = GetHttp._HUNTING;
+        									if(i==LoginActivity.id)
+        									{
+        										role = HUNTER;
+        									}
+        									
+        								}
+        								Log.d("post", "Stage_player"+i+":"+GetHttp._detailStage[i]);
+        							}
+        						}
+        						
+        					}
+        					if((GetHttp._stage[LoginActivity.id]==GetHttp.NOT_FREE)&&(flag_play==0))
+        					{
+        						mTestButton.setVisibility(View.VISIBLE);
+        						handle_shooting.post(updateStateButton);
+        						flag_play = 1;
+        					}
+        					
+        					for(i=_startIndex;i<_endIndex;i++)
+        					{
+        						
+        						if(i!= LoginActivity.id)
+        						{
+        							if(GetHttp.BTAddressIndex[i]!=-1)
+        							{
+        								index=message.indexOf(",",GetHttp.BTAddressIndex[i]+19);
+        								if(!message.substring(GetHttp.BTAddressIndex[i]+19,index).equals("null"))
+        								{
+        									index=message.indexOf("\"",GetHttp.BTAddressIndex[i]+20);
+        									Log.d("address","\n BTAddress index"+i+":"+message.substring(GetHttp.BTAddressIndex[i]+20,index));
+        									GetHttp._BTAddress[i]=message.substring(GetHttp.BTAddressIndex[i]+20,index);
+        								}
+        								else
+        								{
+        									GetHttp._BTAddress[i]="null";
+        									Log.d("address","\n BTAddress index"+i+":"+message.substring(GetHttp.BTAddressIndex[i]+19,index));
+        								}
+        								Log.d("post", "BTAddress_player"+i+":"+GetHttp._BTAddress[i]);
+        							}
+        						}
+        					}
+        					flag_channel = false;
+        					GetHttp.flag_update = true;
+        					flag_play_update = COMPLETED;
+        				
+                    	
+                    	}
+                    	else if((type_value.equals(type_fight))||(type_value.equals(type_hit))||(type_value.equals(type_withdraw)))
+                    	{
+                    		Log.d("socket","hunter target:"+message);
+                    		flag_type = socFIGHT;
+                    		String _id_value="";
+                    		int _index = message.indexOf("hunter");
+                    		int _index1 = 0;
+                    		
+                    		if(_index!=-1)
+                    		{
+                    			_index1 = message.indexOf("\"", _index+15);
+                    			_id_value = message.substring(_index+15, _index1);
+                    			temp_hunter = Integer.parseInt(_id_value);
+                    		}
+                    		_index = message.indexOf("target");
+                    		_index1 = 0;
+                    		if(_index!=-1)
+                    		{
+                    			_index1 = message.indexOf("\"", _index+15);
+                    			_id_value = message.substring(_index+15, _index1);
+                    			temp_target = Integer.parseInt(_id_value);
+                    		}
+                    		
+                    		String stage ="stage";
+        					String address="bluetooth_address";
+        					String pos = "position";
+        					
+        					int index = message.indexOf(pos);
+        					int index1 = 0;
+        					int i = 1;
+        					if(index!=-1)
+        					{
+        						GetHttp.PosIndex[temp_hunter]=index;
+        					}
+        					index = message.indexOf(pos, index+1);
+        					if(index!=-1)
+        						GetHttp.PosIndex[temp_target]=index;
+        					
+        					GetHttp._Online[temp_hunter]=true;
+        					GetHttp._Online[temp_target]=true;
+        					GetHttp._stage[temp_hunter] = GetHttp.FREE;
+        					GetHttp._stage[temp_target] = GetHttp.FREE;
+        					
+        					
+        					if(!message.substring(GetHttp.PosIndex[temp_hunter]+10,GetHttp.PosIndex[temp_hunter]+14).equals("null"))
+							{
+								
+								index=message.indexOf("\"",GetHttp.PosIndex[temp_hunter]+23);
+								GetHttp._Lat[temp_hunter]=message.substring(GetHttp.PosIndex[temp_hunter]+23,index);
+								index1 = index+15;
+								index = message.indexOf("\"",index1);
+								GetHttp._Long[temp_hunter]=message.substring(index1,index);
+								
+								Log.d("post", "Lat_player"+temp_hunter+":"+GetHttp._Lat[temp_hunter]);
+								Log.d("post", "Long_player"+temp_hunter+":"+GetHttp._Long[temp_hunter]);
+							}
+							else
+							{
+								GetHttp._Lat[temp_hunter]="null";
+								GetHttp._Long[temp_hunter]="null";
+							}
+        					
+        					if(!message.substring(GetHttp.PosIndex[temp_target]+10,GetHttp.PosIndex[temp_target]+14).equals("null"))
+							{
+								
+								index=message.indexOf("\"",GetHttp.PosIndex[temp_target]+23);
+								GetHttp._Lat[temp_target]=message.substring(GetHttp.PosIndex[temp_target]+23,index);
+								index1 = index+15;
+								index = message.indexOf("\"",index1);
+								GetHttp._Long[temp_target]=message.substring(index1,index);
+								
+								Log.d("post", "Lat_player"+temp_target+":"+GetHttp._Lat[temp_target]);
+								Log.d("post", "Long_player"+temp_target+":"+GetHttp._Long[temp_target]);
+							}
+							else
+							{
+								GetHttp._Lat[temp_target]="null";
+								GetHttp._Long[temp_target]="null";
+							}
+        					
+        					for(int index2=_startIndex;index2<_endIndex;index2++)
+        					{
+        						validMarker[index2]=false;
+        					}
+        					
+        					flag_channel = false;
+        					GetHttp.flag_update = true;
+        					flag_play_update = COMPLETED;
+                    	
+                     	
+                    	
+                    	}
+//                    	else if(type_value.equals(type_hit))
+//                    	{
+//                    		Log.d("socket","hit:"+message);
+//                    	}
+//                    	else if(type_value.equals(type_withdraw))
+//                    	{
+//                    		Log.d("socket","withdraw:"+message);
+//                    	}
+                    	
+                    	//update state marker, distance
+            			Location locationA = new Location("point A");
+            			locationA.setLongitude(myLong);
+            			locationA.setLatitude(myLat);
+            			Location locationB = new Location("point B");
+            			float distance[] = new float[4];
+  
+            	        BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
+            	        BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+            	        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
+            	        int flag_hunter = 0;
+            	        if(GetHttp.flag_update==true)
+            	        {
+//            	        	if(flag_type == socTRACKING)
+            	        	{
+	            	        	mMap.clear();
+	            	        	LatLng[] latLngArr = new LatLng[11];
+	            	        	
+	            	        	for(int index=_startIndex;index<_endIndex;index++)
+	            	        	{
+	            	        		if(flag_type==socLOGIN)
+	            	        		{
+	            	        			index = temp;
+	            	        		}
+	            	        		else if(flag_type==socFIGHT)
+	            	        		{
+	            	        			if(flag_hunter==0)
+	            	        			{
+	            	        				index=temp_hunter;
+	            	        				flag_hunter = 1;
+	            	        			}
+	            	        			else
+	            	        				index=temp_target;
+	            	        			
+	            	        		}
+	            	        		
+	            	        		if(index!=LoginActivity.id)
+	            	        		{
+	            	        			try
+	            	    	        	{
+	            	        				latLngArr[index]= new LatLng(Double.parseDouble(GetHttp._Lat[index]),Double.parseDouble(GetHttp._Long[index]));
+	            	    	        	}
+	            	    	        	catch(NumberFormatException e)
+	            	    	        	{
+	            	    	        	  //not a double
+	            	    	        		latLngArr[index]= new LatLng(0,0);
+	            	    	        	}
+	            	        			
+	            	        		}
+	            	        		if(flag_type==socLOGIN)
+	            	        		{
+	            	        			index = _endIndex-1;
+	            	        		}
+	            	        	}
+	            	        	flag_hunter = 0;
+	            	        	int j = 0;
+	            				for(int index=_startIndex;index<_endIndex;index++)
+	            				{
+	            					if(flag_type==socLOGIN)
+	            	        		{
+	            	        			index = temp;
+	            	        		}
+	            					else if(flag_type==socFIGHT)
+	            	        		{
+	            	        			if(flag_hunter==0)
+	            	        			{
+	            	        				index=temp_hunter;
+	            	        				flag_hunter = 1;
+	            	        			}
+	            	        			else
+	            	        				index=temp_target;
+	            	        			
+	            	        		}
+	            					
+	            					if(index<LoginActivity.id)
+	            					{
+	            						j=index%6;
+	            					}
+	            					else
+	            						j=index%6-1;
+	            					
+	            					validMarker[index] = false;
+	            	     			if((index!=LoginActivity.id)&&(GetHttp._Online[index]==true))
+	            					{
+	            						if(GetHttp._stage[index]==GetHttp.FREE)
+	            				        {
+	            							if(!latLngArr[index].equals(new LatLng(0,0)))
+	            							{
+	            							
+	            								if(index==targetId)
+	            								{
+	            									targetId = 0;
+	            									GetHttp.choseTarget = false;
+	            								}
+	            						        MarkerArr[index]= mMap.addMarker(new MarkerOptions()
+	            						        .position(latLngArr[index])
+	            						        .icon(bitmapDesFree)
+	            						        .title("player"+index));
+	            						        MarkerArr[index].showInfoWindow();
+	            						        
+	            						        validMarker[index] = true;
+	            							}
+	            							else
+	            								validMarker[index] = false;
+	            							
+	            				        }
+	            				        else
+	            				        {
+	            				        	if(!latLngArr[index].equals(new LatLng(0,0)))
+	            				        	{
+	            					        	MarkerArr[index]=mMap.addMarker(new MarkerOptions()
+	            						        .position(latLngArr[index])
+	            						        .icon(bitmapDesNotFree)
+	            						        .title("player"+index));
+	            					        	MarkerArr[index].showInfoWindow();
+	            					        	validMarker[index] = true;
+	            				        	}
+	            				        	else
+	            				        		validMarker[index] = false;
+	            				        	
+	            					        
+	            				        }
+	            						
+	            						if(index==targetId)
+	            						{
+	            							if(!latLngArr[index].equals(new LatLng(0,0)))
+	            							{
+	
+	            								targetText[j].setTextColor(Color.parseColor("#ff0000"));
+	            								targetText[j].setText("My target:");
+	            								locationB.setLatitude(latLngArr[index].latitude);
+	            						        locationB.setLongitude(latLngArr[index].longitude);
+	            						        Log.e("MyLocation",myLong + "    " + myLat);
+	            						        Log.e("OtherLocation",latLngArr[index].longitude + "    " + latLngArr[index].latitude);
+	            						        distance[j] = locationA.distanceTo(locationB); 
+	            						        distanceText[j].setTextColor(Color.parseColor("#ff0000"));
+	            						        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
+	            						        
+	            						        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
+	            							}
+	            						}
+	            						else
+	            						{
+	            							if(!latLngArr[index].equals(new LatLng(0,0)))
+	            							{
+	            								if(GetHttp._stage[index]==GetHttp.FREE)
+	            								{
+	            									targetText[j].setTextColor(Color.parseColor("#0000ff"));
+	            									targetText[j].setText("Player"+index+":");
+	            									locationB.setLatitude(latLngArr[index].latitude);
+	            							        locationB.setLongitude(latLngArr[index].longitude);
+	            							        Log.e("MyLocation",myLong + "    " + myLat);
+	            							        Log.e("OtherLocation",latLngArr[index].longitude + "    " + latLngArr[index].latitude);
+	            							        distance[j] = locationA.distanceTo(locationB);
+	            							        distanceText[j].setTextColor(Color.parseColor("#0000ff"));
+	            							        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
+	            							        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
+	            							        
+	            							        if(LoginActivity.id == index)
+	            							        {
+	            							        	pre_LatLng = new LatLng(0,0);
+	            							        }
+	            								}
+	            								else
+	            								{
+	            									targetText[j].setTextColor(Color.parseColor("#ff0000"));
+	            									targetText[j].setText("Player"+index+":");
+	            									locationB.setLatitude(latLngArr[index].latitude);
+	            							        locationB.setLongitude(latLngArr[index].longitude);
+	            							        Log.e("MyLocation",myLong + "    " + myLat);
+	            							        Log.e("OtherLocation",latLngArr[index].longitude + "    " + latLngArr[index].latitude);
+	            							        distance[j] = locationA.distanceTo(locationB);
+	            							        distanceText[j].setTextColor(Color.parseColor("#ff0000"));
+	            							        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
+	            							        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
+	            								}
+	//            								pre_LatLng = new LatLng(0,0);
+	            							}
+	            						}
+//	            				        j++;
+	            					}
+	            	     			else if((index!=LoginActivity.id)&&(GetHttp._Online[index]==false))
+	            	     			{
+            	     					targetText[j].setText("PlayerOther:");
+		            	     			distanceText[j].setText("Offline");
+	            	     				
+	            	     			}
+	            	     			if(showInfo==false)
+	            	     			{
+	            	     				showInfo = true;
+	            	     				handle_info.postDelayed(ShowInfor, 0);
+	            	     				Log.e("Info","Show infor");
+	            	     			}
+	            	     			
+	            	     			if(flag_type==socLOGIN)
+	            	        		{
+	            	        			index = _endIndex-1;
+	            	        		}
+	            					
+	            				}
+            	        	}
+//            	        	else if(flag_type==socLOGIN)
+//            	        	{
+//            	        		LatLng latLngNew = new LatLng(0,0);
+//            	        		Log.e("new user","new user position"+GetHttp._Lat[temp]+","+GetHttp._Long[temp]);
+//            	        		try
+//        	    	        	{
+//            	        			latLngNew= new LatLng(Double.parseDouble(GetHttp._Lat[temp]),Double.parseDouble(GetHttp._Long[temp]));
+//        	    	        	}
+//        	    	        	catch(NumberFormatException e)
+//        	    	        	{
+//        	    	        	  //not a double
+//        	    	        		latLngNew= new LatLng(0,0);
+//        	    	        	}
+//            	        		if(!latLngNew.equals(new LatLng(0,0)))
+//    							{
+//    							
+//    						        MarkerArr[temp]= mMap.addMarker(new MarkerOptions()
+//    						        .position(latLngNew)
+//    						        .icon(bitmapDesFree)
+//    						        .title("player"+temp));
+//    						        MarkerArr[temp].showInfoWindow();
+//    						        
+//    						        validMarker[temp] = true;
+//    							}
+//    							else
+//    								validMarker[temp] = false;
+//            	        		if(!latLngNew.equals(new LatLng(0,0)))
+//    							{
+//    								
+//            	        			targetText[0].setTextColor(Color.parseColor("#0000ff"));
+//            	        			targetText[0].setText("Player"+temp+":");
+//    									locationB.setLatitude(latLngNew.latitude);
+//    							        locationB.setLongitude(latLngNew.longitude);
+//    							        Log.e("MyLocation",myLong + "    " + myLat);
+//    							        Log.e("OtherLocation",latLngNew.longitude + "    " + latLngNew.latitude);
+//    							        distance[0] = locationA.distanceTo(locationB);
+//    							        distanceText[0].setTextColor(Color.parseColor("#0000ff"));
+//    							        distanceText[0].setText(String.valueOf(new DecimalFormat("##.##").format(distance[0]))+" m");
+//    							        Log.e("distance","distance"+temp+":"+String.valueOf(distance[0]));
+//    							        
+//    							        if(LoginActivity.id == temp)
+//    							        {
+//    							        	pre_LatLng = new LatLng(0,0);
+//    							        }
+//    								
+//    							}
+//            	        		
+//            	        	}
+            
+            		        GetHttp.flag_update = false;
+            		        Log.d("update", "+ update completed");
+            		        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
+            		        
+            		        flag_type = socNONE;
+            	        }
+                    flag_proc_mess = false;
+                    }
+                });
+            }
+
+            @Override
+            public void onClose(int i, String s, boolean b) {
+                Log.i("Websocket", "Closed " + s);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.i("Websocket", "Error " + e.getMessage());
+            }
+        };
+        mWebSocketClient.connect();
+    
 	}
 
 	@Override
@@ -440,6 +1180,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			}
 			ensureDiscoverable();
 		}
+//		socLogin();
 	}
 
 	@Override
@@ -474,9 +1215,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						new DialogInterface.OnClickListener() {
 							public void onClick(DialogInterface dialog, int id) {
 								
-								// p1. su ly phan server va phan google map khi nhan nut back
-								// p2. su ly phan bluetooth khi nhan nut back
-								// p3. ket thuc activity bang cach goi ham finish()
 								
 								if (mChatService.getState() == BluetoothService.STATE_CONNECTED){
 									sendMessage("I press back");
@@ -498,11 +1236,14 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				                zoomMap = false;
 				                role = NO_PLAY;
 				                flag_vibra = false;
+				                flag_proc_mess = false;
+				                isTracking = 0;
 				                LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;				                
 								handle_info.removeCallbacks(ShowInfor);
 								handle_shooting.removeCallbacks(updateStateButton);	
 								handle_blinkScreen.removeCallbacks(blinkingScreen);
 								Log.i(TAG, "front finish() menthod");
+								 mWebSocketClient.close();
 //								mChatService = null;
 								
 								finish();
@@ -518,6 +1259,24 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 
 	}
 	
+	private void socLogin()
+	{
+		flag_type = socLOGIN;
+		mWebSocketClient.send("{\"type\":\"subscribe\",\"_token\":\""+LoginActivity.token+"\"}");
+	}
+	
+	
+	private void socHit()
+	{
+		flag_type = socHIT;
+		mWebSocketClient.send("{\"type\":\"hit\"}");
+	}
+	private void socWithdraw()
+	{
+		flag_type = socWITHDRAW;
+		mWebSocketClient.send("{\"type\":\"withdraw\"}");
+	}
+	
 	private void setupChat() {
 		Log.d(TAG, "setupChat()");
 		mPlayButton.setOnClickListener(new OnClickListener() {
@@ -525,14 +1284,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				
-				
-//				if (mChatService.getState() != BluetoothService.STATE_CONNECTED) {
-//					Toast.makeText(getApplicationContext(), R.string.not_connected, Toast.LENGTH_SHORT)
-//							.show();
-//					
-//					return;
-//				} else 
+
 				{
 					if(mPlayButton.getText().equals("Reset"))
 					{
@@ -559,37 +1311,26 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 							{
 								if(flag_shoot==1)
 								{
-					                GetHttp hit = new GetHttp();
-					                if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
-					                {
-					                	LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
-						                hit.execute("http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
-						                Log.d("fight","http://54.255.184.201/api/v1/fight/hit?_token="+LoginActivity.token);
-						                GetHttp.setOnPost(new OnPost(){
-						    				public void onpost(String result){
-						    					Log.d("result","result hit:"+result);
-						    					int index=result.indexOf("You won.");
-						    					if(index!=-1)
-						    					{
-						    						Log.d("result","result Win");
-						    						String message = "You die!";
-						    						sendMessage = message;
-									                sendMessage(message);
-									                flag_shoot = 0;
-									                flag_win = 1;
-									                flag_play = 0;
-									                targetId = 0;
-									                role = NO_PLAY;
-									                GetHttp.choseTarget=false;
-									                flag_resultbtn = false;
-									                
-									                mPlayButton.setText("Reset");
-									                mPlayButton.setBackgroundColor(0xFFFFFFFF);
-									                handle_shooting.removeCallbacks(updateStateButton);
-						    					}
-						    				}
-						    			});
-					                }
+									
+									Log.d("result","result Win");
+		    						String message = "You die!";
+		    						sendMessage = message;
+					                sendMessage(message);
+					                flag_shoot = 0;
+					                flag_win = 1;
+					                flag_play = 0;
+					                targetId = 0;
+					                role = NO_PLAY;
+					                GetHttp.choseTarget=false;
+					                flag_resultbtn = false;
+					                
+					                mTestButton.setVisibility(View.INVISIBLE);
+					                mPlayButton.setText("Reset");
+					                mPlayButton.setBackgroundColor(0xFFFFFFFF);
+					                handle_shooting.removeCallbacks(updateStateButton);
+					                
+					                socHit();
+
 								
 								}
 								else
@@ -626,36 +1367,24 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 							.setPositiveButton("Ok",
 									new DialogInterface.OnClickListener() {
 										public void onClick(DialogInterface dialog, int id) {
-											GetHttp hit = new GetHttp();
 											
-							                hit.execute("http://54.255.184.201/api/v1/fight/withdraw?_token="+LoginActivity.token);
-							                Log.d("fight","http://54.255.184.201/api/v1/fight/withdraw?_token="+LoginActivity.token);
-							                GetHttp.setOnPost(new OnPost(){
-							    				public void onpost(String result){
-							    					Log.d("result","result withdraw:"+result);
-							    					int index=result.indexOf("You lose");
-							    					if(index!=-1)
-							    					{
-							    						Log.d("result","You lose");
-							    					}
-							    					if (mChatService.getState() == BluetoothService.STATE_CONNECTED){
-														sendMessage("I press back");
-													}
-													else {
-														mChatService.stop();
-													}
-							    					
-							    					if (mChatService.getState() == BluetoothService.STATE_NONE){
-														mChatService.start();
-													}
-							    					flag_shoot = 0;
-									                flag_win = 1;
-									                flag_play = 0;
-									                targetId = 0;
-									                GetHttp.choseTarget=false;
-							    					mTestButton.setVisibility(View.INVISIBLE);
-							    				}
-							    			});
+											socWithdraw();
+											
+											flag_shoot = 0;
+							                flag_win = 1;
+							                flag_play = 0;
+							                targetId = 0;
+							                //
+							                //
+							                resetCommandIsTrue = true;
+											String message = "new session";
+											sendMessage = message;
+											sendMessage(message);
+							                //
+							                GetHttp.choseTarget=false;
+					    					mTestButton.setVisibility(View.INVISIBLE);
+					    					setStatus(R.string.title_no_play);
+
 										}
 									})
 								.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -671,23 +1400,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                 }
 			}
 		});
-//		mRoleButton.setOnClickListener(new OnClickListener() {
-//			
-//			@Override
-//			public void onClick(View v) {
-//				// TODO Auto-generated method stub
-//				role = TARGET;
-//			}
-//		});
-//		mBlinkButton.setOnClickListener(new OnClickListener() {
-//			
-//			@SuppressLint("NewApi")
-//			@Override
-//			public void onClick(View v) {
-//				// TODO Auto-generated method stub
-//				handle_blinkScreen.postDelayed(blinkingScreen, 1000);
-//			}
-//		});
 		
 		// Initialize the BluetoothChatService to perform bluetooth connections
 		if(mChatService == null){
@@ -954,7 +1666,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				}
 				else if(sendMessage.equals("new session")){
 					mPlayButton.setText("PLAY");
-					Log.e(TAG,"---------------------------------------- truoc dong 947");
 					mChatService.reset();
 					resetCommandIsTrue = false;
 				}
@@ -972,7 +1683,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		                mResultButton.setBackgroundColor(0x0000FFFF);
 		                
 		                handle_blinkScreen.postDelayed(blinkingScreen, 0);
-		                
+		                mTestButton.setVisibility(View.INVISIBLE);
 		                mPlayButton.setText("Reset");
 	                }
 	                if (readMessage.equals("new session") )
@@ -1082,190 +1793,147 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 					}
 				});
         	}
-        	else
-        	{
-        		CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLng(latLng);
-        		mMap.moveCamera(cameraUpdate);
-        	}
-			
-			Location locationA = new Location("point A");
-			locationA.setLongitude(myLong);
-			locationA.setLatitude(myLat);
-			Location locationB = new Location("point B");
-			float distance[] = new float[4];
-			
-			// (1)request get infor user
-			// (2)parse to get id -> long, lat -> convert string to double
-			// (3)assign long,lat to every object
-			// (4)display on map 
-			//=> create handler here -> parameter is function implement (1),(2),(3),(4). 
-			
-			Float acc = location.getAccuracy();
-	        BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
-	        BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
-	        
-	        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
-	        if(GetHttp.flag_update==true)
-	        {
-	        	mMap.clear();
-	        	LatLng[] latLngArr = new LatLng[11];
-	        	for(int index=_startIndex;index<_endIndex;index++)
-	        	{
-	        		if(index!=LoginActivity.id)
-	        		{
-	        			try
-	    	        	{
-	        				latLngArr[index]= new LatLng(Double.parseDouble(GetHttp._Lat[index]),Double.parseDouble(GetHttp._Long[index]));
-	    	        	}
-	    	        	catch(NumberFormatException e)
-	    	        	{
-	    	        	  //not a double
-	    	        		latLngArr[index]= new LatLng(0,0);
-	    	        	}
-	        			
-	        		}
-	        	}
-	        	int j = 0;
-				for(int index=_startIndex;index<_endIndex;index++)
-				{
-					
-	     			if(index!=LoginActivity.id)
-					{
-						if(GetHttp._stage[index]==GetHttp.FREE)
-				        {
-							if(!latLngArr[index].equals(new LatLng(0,0)))
-							{
-							
-								if(index==targetId)
-								{
-									targetId = 0;
-									GetHttp.choseTarget = false;
-								}
-						        MarkerArr[index]= mMap.addMarker(new MarkerOptions()
-						        .position(latLngArr[index])
-						        .icon(bitmapDesFree)
-						        .title("player"+index));
-						        MarkerArr[index].showInfoWindow();
-						        
-						        validMarker[index] = true;
-							}
-							else
-								validMarker[index] = false;
-							
-				        }
-				        else
-				        {
-				        	if(!latLngArr[index].equals(new LatLng(0,0)))
-				        	{
-					        	MarkerArr[index]=mMap.addMarker(new MarkerOptions()
-						        .position(latLngArr[index])
-						        .icon(bitmapDesNotFree)
-						        .title("player"+index));
-					        	MarkerArr[index].showInfoWindow();
-					        	validMarker[index] = true;
-				        	}
-				        	else
-				        		validMarker[index] = false;
-				        	
-					        
-				        }
-						
-						if(index==targetId)
-						{
-							if(!latLngArr[index].equals(new LatLng(0,0)))
-							{
-								targetText[j].setTextColor(Color.parseColor("#ff0000"));
-								targetText[j].setText("My target:");
-								locationB.setLatitude(latLngArr[index].latitude);
-						        locationB.setLongitude(latLngArr[index].longitude);
-						        Log.e("MyLocation",myLong + "    " + myLat);
-						        Log.e("OtherLocation",latLngArr[index].longitude + "    " + latLngArr[index].latitude);
-						        distance[j] = locationA.distanceTo(locationB); 
-						        distanceText[j].setTextColor(Color.parseColor("#ff0000"));
-						        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
-						        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
-							}
-						}
-						else
-						{
-							if(!latLngArr[index].equals(new LatLng(0,0)))
-							{
-								if(GetHttp._stage[index]==GetHttp.FREE)
-								{
-									targetText[j].setTextColor(Color.parseColor("#0000ff"));
-									targetText[j].setText("Player"+index+":");
-									locationB.setLatitude(latLngArr[index].latitude);
-							        locationB.setLongitude(latLngArr[index].longitude);
-							        Log.e("MyLocation",myLong + "    " + myLat);
-							        Log.e("OtherLocation",latLngArr[index].longitude + "    " + latLngArr[index].latitude);
-							        distance[j] = locationA.distanceTo(locationB);
-							        distanceText[j].setTextColor(Color.parseColor("#0000ff"));
-							        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
-							        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
-								}
-								else
-								{
-									targetText[j].setTextColor(Color.parseColor("#ff0000"));
-									targetText[j].setText("Player"+index+":");
-									locationB.setLatitude(latLngArr[index].latitude);
-							        locationB.setLongitude(latLngArr[index].longitude);
-							        Log.e("MyLocation",myLong + "    " + myLat);
-							        Log.e("OtherLocation",latLngArr[index].longitude + "    " + latLngArr[index].latitude);
-							        distance[j] = locationA.distanceTo(locationB);
-							        distanceText[j].setTextColor(Color.parseColor("#ff0000"));
-							        distanceText[j].setText(String.valueOf(new DecimalFormat("##.##").format(distance[j]))+" m");
-							        Log.e("distance","distance"+j+":"+String.valueOf(distance[j]));
-								}
-							}
-						}
-				        j++;
-					}
-	     			if(showInfo==false)
-	     			{
-	     				showInfo = true;
-	     				handle_info.postDelayed(ShowInfor, 0);
-	     				Log.e("Info","Show infor");
-	     			}
-					
+			if(isTracking==1)
+			{
+				try {
+					Log.d("tracking","send tracking");
+					mWebSocketClient.send("{\"type\":\"tracking\",\"longitude\":\""+myLong+"\",\"latitude\":\""+myLat+"\"}");
+					Log.d("tracking","send tracking completed");
+				} catch (Exception e) {
+					// TODO: handle exception
 				}
-
-		        GetHttp.flag_update = false;
-		        Log.d("update", "+ update completed");
-		        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
-	        }
-        	
-	        
-	        if(flag_channel==false)
-	        {
-		        Log.e("update", "+ Flag getpost:"+LoginActivity.flag_getpost);
-		        if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
-		        {
-		        	LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
-		        	Log.e("http", "+ HTTP POST ME BUZY +");
-			        PostHttp.casepost = PostHttp.TRACKING;
-					new PostHttp().execute("http://54.255.184.201/api/v1/tracking?_token="+LoginActivity.token);
-					flag_channel = true;
-			        Log.d("update","channel:"+flag_channel);
-				}
-		        
-	        }
-	        else
-	        {
-		        if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
-	    		{
-	        		Log.e("update", "+ UPDATE 2 +");
-	        		Log.d("update", "+ Flag update:"+ GetHttp.flag_update);
-	    			LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
-	    			UpdateStatusPlayer();
-//	    			flag_channel = false;
-	    		}
-		        
-	        }
+				
+			}
 
 		}
 		
 	   
-			
+		private final double degreesPerRadian = 180.0 / Math.PI;	
+		private void DrawArrowHead(GoogleMap mMap, LatLng from, LatLng to){
+		    // obtain the bearing between the last two points
+		    double bearing = GetBearing(from, to);
+
+		    // round it to a multiple of 3 and cast out 120s
+		    double adjBearing = Math.round(bearing / 3) * 3;
+		    while (adjBearing >= 120) {
+		        adjBearing -= 120;
+		    }
+
+		    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+		    StrictMode.setThreadPolicy(policy); 
+
+		    // Get the corresponding triangle marker from Google        
+		    URL url;
+		    Bitmap image = null;
+
+		    try {
+		        url = new URL("http://www.google.com/intl/en_ALL/mapfiles/dir_" + String.valueOf((int)adjBearing) + ".png");
+		        try {
+		            image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+		        } catch (IOException e) {
+		            // TODO Auto-generated catch block
+		            e.printStackTrace();
+		        }
+		    } catch (MalformedURLException e) {
+		        // TODO Auto-generated catch block
+		        e.printStackTrace();
+		    }
+
+		    if (image != null){
+
+		        // Anchor is ratio in range [0..1] so value of 0.5 on x and y will center the marker image on the lat/long
+		        float anchorX = 0.5f;
+		        float anchorY = 0.5f;
+
+		        int offsetX = 0;
+		        int offsetY = 0;
+
+		        // images are 24px x 24px
+		        // so transformed image will be 48px x 48px
+
+		        //315 range -- 22.5 either side of 315
+		        if (bearing >= 292.5 && bearing < 335.5){
+		            offsetX = 24;
+		            offsetY = 24;
+		        }
+		        //270 range
+		        else if (bearing >= 247.5 && bearing < 292.5){
+		            offsetX = 24;
+		            offsetY = 12;
+		        }
+		        //225 range
+		        else if (bearing >= 202.5 && bearing < 247.5){
+		            offsetX = 24;
+		            offsetY = 0;
+		        }
+		        //180 range
+		        else if (bearing >= 157.5 && bearing < 202.5){
+		            offsetX = 12;
+		            offsetY = 0;
+		        }
+		        //135 range
+		        else if (bearing >= 112.5 && bearing < 157.5){
+		            offsetX = 0;
+		            offsetY = 0;
+		        }
+		        //90 range
+		        else if (bearing >= 67.5 && bearing < 112.5){
+		            offsetX = 0;
+		            offsetY = 12;
+		        }
+		        //45 range
+		        else if (bearing >= 22.5 && bearing < 67.5){
+		            offsetX = 0;
+		            offsetY = 24;
+		        }
+		        //0 range - 335.5 - 22.5
+		        else {
+		            offsetX = 12;
+		            offsetY = 24;
+		        }
+
+		        Bitmap wideBmp;
+		        Canvas wideBmpCanvas;
+		        Rect src, dest;
+
+		        // Create larger bitmap 4 times the size of arrow head image
+		        wideBmp = Bitmap.createBitmap(image.getWidth() * 2, image.getHeight() * 2, image.getConfig());
+
+		        wideBmpCanvas = new Canvas(wideBmp); 
+
+		        src = new Rect(0, 0, image.getWidth(), image.getHeight());
+		        dest = new Rect(src); 
+		        dest.offset(offsetX, offsetY); 
+
+		        wideBmpCanvas.drawBitmap(image, src, dest, null);
+
+		        mMap.addMarker(new MarkerOptions()
+		        .position(to)
+		        .icon(BitmapDescriptorFactory.fromBitmap(wideBmp))
+		        .anchor(anchorX, anchorY));
+		    }
+		}
+
+		private double GetBearing(LatLng from, LatLng to){
+		    double lat1 = from.latitude * Math.PI / 180.0;
+		    double lon1 = from.longitude * Math.PI / 180.0;
+		    double lat2 = to.latitude * Math.PI / 180.0;
+		    double lon2 = to.longitude * Math.PI / 180.0;
+
+		    // Compute the angle.
+		    double angle = - Math.atan2( Math.sin( lon1 - lon2 ) * Math.cos( lat2 ), Math.cos( lat1 ) * Math.sin( lat2 ) - Math.sin( lat1 ) * Math.cos( lat2 ) * Math.cos( lon1 - lon2 ) );
+
+		    if (angle < 0.0)
+		        angle += Math.PI * 2.0;
+
+		    // And convert result to degrees.
+		    angle = angle * degreesPerRadian;
+
+		    return angle;
+		}
+
+
+
 		@Override
 		public void onProviderDisabled(String provider) {
 			// TODO Auto-generated method stub
@@ -1288,8 +1956,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	Runnable ShowInfor = new Runnable(){
         public void run(){
              //call the service here
-	
-        	
 			if(indexInfor!=LoginActivity.id)
 			{
 				if(validMarker[indexInfor])
@@ -1329,8 +1995,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			{
 				Log.e("vibrator","vibrator");
 				v_target = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-				 // Vibrate for 500 milliseconds
-				v_target.vibrate(2000);
+				 // Vibrate for 1000 milliseconds
+				v_target.vibrate(1000);
 				flag_vibra = true;
 				
 				mResultButton.setVisibility(View.VISIBLE);
@@ -1340,189 +2006,15 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                 {
                 	setStatus(R.string.title_hunter_out);
                 }
-//                if((mChatService.getState() == BluetoothService.STATE_CONNECTED))
-//                {
-//                	setStatus(R.string.title_hunter_in);
-//                }
-//                else
-//                	setStatus(R.string.title_hunter_out);
                 
                 flag_resultbtn = true;
 
 			}
-//			if(role==NO_PLAY)
-//			{
-//				setStatus(R.string.title_no_play);
-//			}
-			
+		
              ////// set the interval time here
-             handle_info.postDelayed(this,1000);
+             handle_info.postDelayed(this,2000);
         }
    };
-
-	public static void UpdateStatusPlayer()
-	{		
-		if(GetHttp.flag_update==false)
-		{
-			Log.e("http", "+ HTTP UPDATE BUZY +");			
-			GetHttp.caseget = GetHttp.UPDATE;			
-			GetHttp statusPlayer = new GetHttp();
-			statusPlayer.execute("http://54.255.184.201/api/v1/users?_token="+LoginActivity.token);
-			Log.d("post","get: http://54.255.184.201/api/v1/users?_token="+LoginActivity.token);
-			GetHttp.setOnPost(new OnPost(){
-				public void onpost(String result){
-					String lat = "latitude";
-					String log = "longitude";
-					String stage ="stage";
-					String address="bluetooth_address";
-					String pos = "position";
-
-					int index = result.indexOf(pos);
-					int index1 = 0;
-					int i = 1;
-					while(index!=-1)
-					{
-						Log.e("status", "++ STATUS ++");
-						GetHttp.PosIndex[i]=index;
-					    Log.d("status","\n position index"+i+":"+index);
-					    index = result.indexOf(pos, index + 1);			    
-					    i++;
-					}
-					index = result.indexOf(stage);
-					i=1;
-					while(index != -1) {
-						Log.e("status", "++ STATUS ++");
-						GetHttp.StageIndex[i]=index;
-					    Log.d("status","\n stage index"+i+":"+index);
-					    index = result.indexOf(stage, index + 1);			    
-					    i++;
-					}
-					index = result.indexOf(address);
-					i=1;
-					while(index != -1) {
-						Log.e("address", "++ Bluetooth Address ++");
-						GetHttp.BTAddressIndex[i]=index;
-					    Log.d("address","\n Bluetooth Address index"+i+":"+index);
-					    index = result.indexOf(address, index + 1);			    
-					    i++;
-					}
-					
-					for(i=_startIndex;i<_endIndex;i++)
-					{
-						if(i!= LoginActivity.id)
-						{
-							if(GetHttp.PosIndex[i]!=-1)
-							{
-								Log.d("status","\n Postion index"+i+":"+result.substring(GetHttp.PosIndex[i]+10,GetHttp.PosIndex[i]+14));
-								if(!result.substring(GetHttp.PosIndex[i]+10,GetHttp.PosIndex[i]+14).equals("null"))
-								{
-									
-									index=result.indexOf("\"",GetHttp.PosIndex[i]+23);
-									GetHttp._Lat[i]=result.substring(GetHttp.PosIndex[i]+23,index);
-									index1 = index+15;
-									index = result.indexOf("\"",index1);
-									GetHttp._Long[i]=result.substring(index1,index);
-									
-									Log.d("post", "Lat_player"+i+":"+GetHttp._Lat[i]);
-									Log.d("post", "Long_player"+i+":"+GetHttp._Long[i]);
-								}
-								else
-								{
-									GetHttp._Lat[i]="null";
-									GetHttp._Long[i]="null";
-								}
-								
-							}
-						}
-					}
-					
-				
-					for(i=_startIndex;i<_endIndex;i++)
-					{
-//						if(i!=LoginActivity.id)
-						{
-							if(GetHttp.StageIndex[i]!=-1)
-							{
-								Log.d("status","\n stage index"+i+":"+result.substring(GetHttp.StageIndex[i]+8,GetHttp.StageIndex[i]+12));
-								index = result.indexOf("\"",GetHttp.StageIndex[i]+8);
-								if(result.substring(GetHttp.StageIndex[i]+8,index).equals("free"))
-								{
-									GetHttp._detailStage[i] = GetHttp._FREE;
-									GetHttp._stage[i] = GetHttp.FREE;
-									if(i==LoginActivity.id)
-									{
-										flag_vibra = false;
-										role = NO_PLAY;
-										
-										if(mTestButton.getVisibility()==View.VISIBLE)
-											mTestButton.setVisibility(View.INVISIBLE);
-									}
-									
-									
-								}
-								else if(result.substring(GetHttp.StageIndex[i]+8,index).equals("be_targeted"))
-								{
-									GetHttp._stage[i]=GetHttp.NOT_FREE;
-									GetHttp._detailStage[i] = GetHttp._BE_TARGETED;	
-									if(i==LoginActivity.id)
-									{
-										role = TARGET;
-									}
-								}
-								else if(result.substring(GetHttp.StageIndex[i]+8,index).equals("hunting"))
-								{
-									GetHttp._stage[i]=GetHttp.NOT_FREE;
-									GetHttp._detailStage[i] = GetHttp._HUNTING;
-									if(i==LoginActivity.id)
-									{
-										role = HUNTER;
-									}
-									
-								}
-								Log.d("post", "Stage_player"+i+":"+GetHttp._detailStage[i]);
-							}
-						}
-						
-					}
-					if((GetHttp._stage[LoginActivity.id]==GetHttp.NOT_FREE)&&(flag_play==0))
-					{
-						mTestButton.setVisibility(View.VISIBLE);
-						handle_shooting.post(updateStateButton);
-						flag_play = 1;
-					}
-					
-					for(i=_startIndex;i<_endIndex;i++)
-					{
-						
-						if(i!= LoginActivity.id)
-						{
-							if(GetHttp.BTAddressIndex[i]!=-1)
-							{
-								index=result.indexOf(",",GetHttp.BTAddressIndex[i]+19);
-								if(!result.substring(GetHttp.BTAddressIndex[i]+19,index).equals("null"))
-								{
-									index=result.indexOf("\"",GetHttp.BTAddressIndex[i]+20);
-									Log.d("address","\n BTAddress index"+i+":"+result.substring(GetHttp.BTAddressIndex[i]+20,index));
-									GetHttp._BTAddress[i]=result.substring(GetHttp.BTAddressIndex[i]+20,index);
-								}
-								else
-								{
-									GetHttp._BTAddress[i]="null";
-									Log.d("address","\n BTAddress index"+i+":"+result.substring(GetHttp.BTAddressIndex[i]+19,index));
-								}
-								Log.d("post", "BTAddress_player"+i+":"+GetHttp._BTAddress[i]);
-							}
-						}
-					}
-					flag_channel = false;
-					GetHttp.flag_update = true;
-					flag_play_update = COMPLETED;
-				}
-			});
-			
-	
-		}
-	}
 
 	@Override
 	public void onConnectionFailed(ConnectionResult arg0) {
@@ -1554,111 +2046,75 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			Log.d("fight","Fight 1");
 			if(arg0.equals(MarkerArr[GetHttp.cntUserId])){
 				Log.d("fight","Fight 2");
-				// just complete reset game - user choose target immediately
-				// must waiting update latest state of player
-				if(flag_play_update==UNCOMPLETED)
+				if(GetHttp.choseTarget==false)
 				{
-					Toast.makeText(getBaseContext(),"Please wait update from server", Toast.LENGTH_LONG).show();
-				}
-				else
-				{
-					if(LoginActivity.flag_getpost==LoginActivity.HTTP_FREE)
+					Log.d("fight","BTAddress"+GetHttp._BTAddress[GetHttp.cntUserId]);
+					if(!GetHttp._BTAddress[GetHttp.cntUserId].equals("null"))
 					{
-						Log.d("fight","Fight 3");
-						LoginActivity.flag_getpost=LoginActivity.HTTP_BUZY;
-						if(GetHttp.choseTarget==false)
-						{
-							Log.d("fight","BTAddress"+GetHttp._BTAddress[GetHttp.cntUserId]);
-							if(!GetHttp._BTAddress[GetHttp.cntUserId].equals("null"))
-							{
-								
-								AlertDialog.Builder builder = new AlertDialog.Builder(this);
-								builder.setMessage("Are you sure you choose player"+GetHttp.cntUserId+" ?")
-										.setCancelable(false)
-										.setPositiveButton("Yes",
-												new DialogInterface.OnClickListener() {
-													public void onClick(DialogInterface dialog, int id) {
-														GetHttp fight = new GetHttp();
-														fight.execute("http://54.255.184.201/api/v1/fight?target="+GetHttp.cntUserId+"&_token="+LoginActivity.token);
-														Log.d("fight","http://54.255.184.201/api/v1/fight?target="+GetHttp.cntUserId+"&_token="+LoginActivity.token);
-														GetHttp.setOnPost(new OnPost(){
-															public void onpost(String result){
-																Log.d("fight","result fight:"+result);
-																int index = result.indexOf("false");
-																if(index!=-1)
-																{
-																	Toast.makeText(getBaseContext(),"Can not choose this player", Toast.LENGTH_LONG).show();
-	//															
-																}
-																index = result.indexOf("true");							
-																if(index!=-1)
-																{
-																	
-																	GetHttp.choseTarget = true;
-																	targetId = GetHttp.cntUserId;
-																	Log.d("fight","target id:"+targetId);
-																	device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
-																	mChatService.connect(device, true);		
-	//																Log.e("rssi","rssi discovery");
-	//																mBluetoothAdapter.startDiscovery();
-																	rssi_value.setText("Out of range");
-																	role=HUNTER;
-																	mTestButton.setVisibility(View.VISIBLE);
-																	Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show();
-																}
-															}
-														});	
-	
-													}
-												})
-										.setNegativeButton("No", new DialogInterface.OnClickListener() {
+						
+						AlertDialog.Builder builder = new AlertDialog.Builder(this);
+						builder.setMessage("Are you sure you choose player"+GetHttp.cntUserId+" ?")
+								.setCancelable(false)
+								.setPositiveButton("Yes",
+										new DialogInterface.OnClickListener() {
+											public void onClick(DialogInterface dialog, int id) {
+												mWebSocketClient.send("{\"type\":\"fight\",\"target\":\""+GetHttp.cntUserId+"\"}");
+												GetHttp.choseTarget = true;
+												targetId = GetHttp.cntUserId;
+												Log.d("fight","target id:"+targetId);
+												device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
+												mChatService.connect(device, true);		
+												rssi_value.setText("Out of range");
+												role=HUNTER;
+												mTestButton.setVisibility(View.VISIBLE);
+												Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show(); 
+											}
+										})
+								.setNegativeButton("No", new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int id) {
+										LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+										dialog.cancel();
+									}
+								});
+						AlertDialog alert = builder.create();
+						alert.show();				
+					
+					}
+					else
+					{
+						
+						AlertDialog.Builder builder = new AlertDialog.Builder(this);
+						builder.setMessage("Format address bluetooth of player"+GetHttp.cntUserId+"is false! Please choose other!")
+								.setCancelable(false)
+								.setPositiveButton("Ok",
+										new DialogInterface.OnClickListener() {
 											public void onClick(DialogInterface dialog, int id) {
 												LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
-												dialog.cancel();
 											}
 										});
-								AlertDialog alert = builder.create();
-								alert.show();				
-							
-							}
-							else
-							{
-								
-								AlertDialog.Builder builder = new AlertDialog.Builder(this);
-								builder.setMessage("Format address bluetooth of player"+GetHttp.cntUserId+"is false! Please choose other!")
-										.setCancelable(false)
-										.setPositiveButton("Ok",
-												new DialogInterface.OnClickListener() {
-													public void onClick(DialogInterface dialog, int id) {
-														LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
-													}
-												});
-								AlertDialog alert = builder.create();
-								alert.show();	
-													
-								
-							}
-							
-						}
-						else 
-						{
-							AlertDialog.Builder builder = new AlertDialog.Builder(this);
-							builder.setMessage("Can't choose other, your target is player"+targetId)
-									.setCancelable(false)
-									.setPositiveButton("Ok",
-											new DialogInterface.OnClickListener() {
-												public void onClick(DialogInterface dialog, int id) {
-													LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
-												}
-											});
-							AlertDialog alert = builder.create();
-							alert.show();
-							
-						}
-	
+						AlertDialog alert = builder.create();
+						alert.show();	
+											
+						
 					}
+					
 				}
-				
+				else 
+				{
+					AlertDialog.Builder builder = new AlertDialog.Builder(this);
+					builder.setMessage("Can't choose other, your target is player"+targetId)
+							.setCancelable(false)
+							.setPositiveButton("Ok",
+									new DialogInterface.OnClickListener() {
+										public void onClick(DialogInterface dialog, int id) {
+											LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;
+										}
+									});
+					AlertDialog alert = builder.create();
+					alert.show();
+					
+				}
+
 				break;
 			}
 		}

@@ -155,7 +155,6 @@ public class BluetoothService {
         if (mSecureAcceptThread == null) {
             mSecureAcceptThread = new AcceptThread(true);
             mSecureAcceptThread.start();
-//            isServer = true;
         }
 
     }
