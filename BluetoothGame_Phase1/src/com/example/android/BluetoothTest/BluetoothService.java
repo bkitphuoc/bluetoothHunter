@@ -72,8 +72,6 @@ public class BluetoothService {
     // em thinh them code
     
     public static boolean isServer = true;
-  //Bach
-//    public static boolean isServer = false;
     public static boolean isClient = false;
     public BluetoothDevice bluetoothDeviceBackup = null;
     public boolean disableReConnect = false;
@@ -84,6 +82,17 @@ public class BluetoothService {
     public BluetoothSocket mmSocket;
     public InputStream mmInStream;
     public OutputStream mmOutStream;
+    
+    public void initialization(){
+    	isServer = true;
+        isClient = false;
+        bluetoothDeviceBackup = null;
+        disableReConnect = false;
+        secureBackUp = false; 
+        startTime_t = 0L;
+        milisecondsCounter = 0L;
+    }
+    
     /**
      * Constructor. Prepares a new BluetoothChat session.
      * @param context  The UI Activity Context
@@ -146,6 +155,7 @@ public class BluetoothService {
         if (mSecureAcceptThread == null) {
             mSecureAcceptThread = new AcceptThread(true);
             mSecureAcceptThread.start();
+//            isServer = true;
         }
 
     }
@@ -310,7 +320,8 @@ public class BluetoothService {
     
     private void reStart(){
     	
-        isServer = true;
+    	stop();
+        isServer = false;
         isClient = false;
 //        BluetoothTest.role = BluetoothTest.NO_PLAY;
     	// Bach
@@ -539,6 +550,7 @@ public class BluetoothService {
                     	Log.i(TAG, "I press back------------------------->");
                     	disableReConnect = true;
                     	String message = "I confirm you press back";
+                    	isServer = false;
                     	byte[] send = message.getBytes();
             			write(send);
             			reStart();
@@ -559,7 +571,7 @@ public class BluetoothService {
                         if(isServer == true){
                         	connectionLostAsServer();
                         }
-                        else{
+                        else if (isClient == true){
                         	connectionLostAsClient();
                         }
                     }
