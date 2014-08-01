@@ -163,7 +163,7 @@
 	                android:id="@+id/distance_1"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:text="Updating..."
+	                android:text="Offline"
 	                android:textColor="#ff0000" />
 	        </LinearLayout>
 	
@@ -182,7 +182,7 @@
 	                android:id="@+id/distance_2"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:text="Updating..."
+	                android:text="Offline"
 	                android:textColor="#ff0000" />
 	        </LinearLayout>
 	
@@ -201,7 +201,7 @@
 	                android:id="@+id/distance_3"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:text="Updating..."
+	                android:text="Offline"
 	                android:textColor="#ff0000" />
 	        </LinearLayout>
 	
@@ -220,7 +220,7 @@
 	                android:id="@+id/distance_4"
 	                android:layout_width="wrap_content"
 	                android:layout_height="wrap_content"
-	                android:text="Updating..."
+	                android:text="Offline"
 	                android:textColor="#ff0000" />
 	        </LinearLayout>
     	</LinearLayout>
