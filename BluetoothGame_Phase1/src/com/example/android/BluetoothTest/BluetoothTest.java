@@ -116,6 +116,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
  */
 public class BluetoothTest extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
 GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, SensorEventListener{
+//	, SensorEventListener
 	// Debugging
 	private static final String TAG = "Shooting Game";
 	private static final boolean D = true;
@@ -992,7 +993,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 	            	        	mMap.clear();
 	            	        	myLocation = mMap.addMarker(new MarkerOptions()
 	            		        .position(new LatLng(myLat,myLong))
-	            		        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow)));
+	            		        .title("me")
+	            		        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow_blue)));
 	            	        	
 	            	        	LatLng[] latLngArr = new LatLng[11];
 	            	        	flag_hunter=0;
@@ -1816,7 +1818,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 			myLat = location.getLatitude();
 			myLocation = mMap.addMarker(new MarkerOptions()
 	        .position(new LatLng(myLat,myLong))
-	        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow)));
+	        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow_blue)));
 			if(zoomMap==false)
         	{
 				Log.d("zoom","zoom 15");
@@ -2201,7 +2203,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 	public void rotateDrawable(float angle)
 	{
 	  Bitmap arrowBitmap = BitmapFactory.decodeResource(this.getResources(), 
-	                                                    R.drawable.pin_arrow);
+	                                                    R.drawable.pin_arrow_blue);
 	  // Create blank bitmap of equal size
 	  Bitmap canvasBitmap = arrowBitmap.copy(Bitmap.Config.ARGB_8888, true);
 	  canvasBitmap.eraseColor(0x00000000);
