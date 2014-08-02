@@ -22,10 +22,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.Random;
+
+import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.handshake.ServerHandshake;
 
 import com.crittercism.app.Crittercism;
-import com.example.android.BluetoothTest.GetHttp.OnPost;
+
 import com.example.android.BluetoothTest.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
@@ -38,22 +40,15 @@ import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.maps.UiSettings;
 
-import android.R.color;
 import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -66,12 +61,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Paint.Align;
-import android.graphics.Paint.Style;
+import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.TransitionDrawable;
+import android.hardware.GeomagneticField;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -81,46 +79,43 @@ import android.os.Handler;
 import android.os.Message;                    
 import android.os.StrictMode;
 import android.os.Vibrator;
-import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.acra.*;
-import org.acra.annotation.*;
-import org.apache.http.client.methods.*;
-import org.apache.http.client.*;
-import org.apache.http.impl.client.*;
-import org.apache.http.*;
-import org.apache.http.util.*;
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.crittercism.app.Crittercism;
+import com.example.android.BluetoothTest.GetHttp.OnPost;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
+import com.google.android.gms.maps.GoogleMap.CancelableCallback;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
  * This is the main Activity that displays the current chat session.
  */
 public class BluetoothTest extends FragmentActivity implements GooglePlayServicesClient.ConnectionCallbacks,
-GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
+GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, SensorEventListener{
 	// Debugging
 	private static final String TAG = "Shooting Game";
 	private static final boolean D = true;
@@ -151,6 +146,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	public static int flag_play = 0;
 	public static int flag_shoot = 0;
 	public static int flag_play_update=0;
+	static int flag_stop_game = 0;
 	private int flag_win = 0;
 	private boolean localPlayIsPressed = false;
 	private boolean remotePlayIsPressed = false;
@@ -189,7 +185,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	TextView rssi_value;
 	
 	GoogleMap mMap;
-	SupportMapFragment fm;
+	MapFragment fm;
 	static View myview;
 	LocationManager locationManager ;
 	LocationListener locationListener;
@@ -238,23 +234,33 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		flag_shoot = 0;
 		flag_play_update=0;
 		flag_win = 0;
+		flag_vibra = false;
+		flag_resultbtn = false;
+		flag_channel = false;
+		flag_play_update = NO_UPDATE;
+		flag_login = 0;
+		flag_type = socNONE;
+		
+		//bluetooth
 		localPlayIsPressed = false;
 		remotePlayIsPressed = false;
 		isConnected = false;
 		resetCommandIsTrue = false;
+		
+		//map
 		zoomMap = false;
 		showInfo = false;
-		targetId=0;
-		_startIndex =0;
-		_endIndex = 0;
 		indexInfor =0;
-		role = 0;
-		HUNTER = 1;
-		TARGET = 2;
-		NO_PLAY = 3;
-		flag_vibra = false;
-		flag_resultbtn = false;
-		flag_channel = false;
+		
+		//player
+		targetId=0;
+		GetHttp.choseTarget=false;
+        GetHttp.flag_update = false;
+        LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;	
+		_startIndex =0;
+		_endIndex = 0;		
+		role = NO_PLAY;
+		
 		
 		//variable
 		if(mChatService != null){
@@ -262,23 +268,35 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			mChatService = null;
 		}
 	}  
+ // sensor member
+ 	float[] inR = new float[16];
+ 	float[] I = new float[16];
+ 	float[] gravity = new float[3];
+ 	float[] geomag = new float[3];
+ 	float[] orientVals = new float[3];
+
+ 	double azimuth = 0;
+ 	double pitch = 0;
+ 	double roll = 0;
+ 	
+ 	private SensorManager sm;
+ 	LatLng latLng = null;
+ 	float degree;
+ 	Marker myLocation;
+ 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 //		ACRA.init(this);
 		if (D)
 			Log.e(TAG, "+++ ON CREATE +++");
-
-		// initialization
-		//initialization();
-		
-		if(mChatService != null){
-			mChatService.stop();
-			mChatService = null;
-		}
-		
 		// Set up the window layout
 		setContentView(R.layout.main);
+		
+		// initialization
+		initialization();
+		GoogleMapOptions a = new GoogleMapOptions();
+    	a.compassEnabled(true);
 		distanceText[0] = (TextView) findViewById(R.id.distance_1);
 		distanceText[1] = (TextView) findViewById(R.id.distance_2);
 		distanceText[2] = (TextView) findViewById(R.id.distance_3);
@@ -305,20 +323,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		handle_shooting = new Handler();
 		handle_blinkScreen = new Handler();
 		
-		myview = (View) findViewById(R.id.my_view);;
-		role = NO_PLAY;
-		flag_vibra = false;
-		flag_play_update = NO_UPDATE;
-		
-		String tokenId = "token";
-		targetId = 0;
-        GetHttp.choseTarget=false;
-        GetHttp.flag_update = false;
-        flag_channel = false;
-        showInfo=false;
-        zoomMap = false;
-        LoginActivity.flag_getpost=LoginActivity.HTTP_FREE;	
+		myview = (View) findViewById(R.id.my_view);
+		String tokenId = "token";       
         
+		// get infor id, token from file
 		SharedPreferences pre=getSharedPreferences(tokenId,MODE_PRIVATE);
 		String s_token=pre.getString("token", "");
 		String s_id=pre.getString("id", "");
@@ -339,6 +347,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
     		_endIndex = 11;
     		indexInfor = _startIndex;
     	}
+    	for(int i=_startIndex;i<_endIndex;i++)
+    	{
+    		validMarker[i]=false;
+    	}
 		// The following line triggers the initialization of ACRA
 		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getBaseContext());
 		 
@@ -352,14 +364,16 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
         }
         else
         {
-        	fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapgame);
-        	 
+        	//fm = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapgame);
+        	fm = (MapFragment) getFragmentManager()
+                    .findFragmentById(R.id.mapgame);
+        	fm.newInstance(a); 
             // Getting GoogleMap object from the fragment
         	mMap = fm.getMap();        	
         	locationListener = new MyLocationListener();
         	
             // Enabling MyLocation Layer of Google Map
-        	mMap.setMyLocationEnabled(true);
+        	//mMap.setMyLocationEnabled(true);
         	mMap.getUiSettings().setAllGesturesEnabled(true);
         	mMap.setOnMarkerClickListener((OnMarkerClickListener) this);
         	
@@ -367,46 +381,58 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
  
             // Creating a criteria object to retrieve provider
-            Criteria criteria = new Criteria();
+            final Criteria criteria = new Criteria();
  
             // Getting the name of the best provider
-            LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
-            boolean enabled = service
-              .isProviderEnabled(LocationManager.GPS_PROVIDER);
+
 
          // check if enabled and if not send user to the GSP settings
             // Better solution would be to display a dialog and suggesting to 
             // go to the settings
-            if (!enabled) {
-            	AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-                // Setting Dialog Title
-                alertDialog.setTitle("GPS is settings");
-               // Setting Dialog Message
-                alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
-                // On pressing Settings button
-                alertDialog.setPositiveButton("Settings", new 
-                           DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog,int which) {
-                        Intent intent = new 
-                                Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                    }
-                });
-
-                // on pressing cancel button
-                alertDialog.setNegativeButton("Cancel", new 
-                 DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                    }
-                });
-
-                // Showing Alert Message
-                alertDialog.show();
-              
-            }
-            else
+//          LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
+//          boolean enabled = service
+//            .isProviderEnabled(LocationManager.GPS_PROVIDER);
+//            if (!enabled) {
+//            	AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
+//                // Setting Dialog Title
+//                alertDialog.setTitle("GPS is settings");
+//               // Setting Dialog Message
+//                alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
+//                // On pressing Settings button
+//                alertDialog.setPositiveButton("Settings", new 
+//                           DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog,int which) {
+//                        Intent intent = new 
+//                                Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+//                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                        startActivity(intent);
+//                    }
+//                });
+//
+//                // on pressing cancel button
+//                alertDialog.setNegativeButton("Cancel", new 
+//                 DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int which) {
+//                    	String provider = locationManager.getBestProvider(criteria, true);
+//        		    	Location loc = locationManager.getLastKnownLocation(provider);
+//        		    	 if(loc!=null){
+//        		             locationListener.onLocationChanged(loc);
+//        		         }
+//        		    	 else
+//        		    	 {
+//        		             Toast.makeText(getBaseContext(), "No location found", Toast.LENGTH_SHORT).show();
+//        		    	 }
+//        		         locationManager = (LocationManager) BluetoothTest.this.getSystemService(Context.LOCATION_SERVICE);
+//        		         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+//                    dialog.cancel();
+//                    }
+//                });
+//
+//                // Showing Alert Message
+//                alertDialog.show();
+//              
+//            }
+//            else
             {
 
 		    	String provider = locationManager.getBestProvider(criteria, true);
@@ -448,18 +474,22 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		
 		mResultButton = (Button)findViewById(R.id.button_result);
 		mResultButton.setVisibility(View.INVISIBLE);
-		flag_resultbtn = false;
+		
 		rssi_msg = (TextView) findViewById(R.id.rssi);
 		rssi_value = (TextView) findViewById(R.id.valuerssi);
-//		mRoleButton = (Button)findViewById(R.id.button_role);
-//		mBlinkButton = (Button)findViewById(R.id.button_blink);
+		
+    //compass
+		sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+		sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                SensorManager.SENSOR_DELAY_GAME);
 
-		flag_login = 0;
-		flag_type = socNONE;
 		connectWebSocket();
 		
 	}
-
+  private MapFragment findFragmentById(int mapgame) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	private void connectWebSocket() {
 		// TODO Auto-generated method stub
 
@@ -474,8 +504,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
         mWebSocketClient = new WebSocketClient(uri) {
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
-            	flag_type = socLOGIN;
-        		mWebSocketClient.send("{\"type\":\"subscribe\",\"_token\":\""+LoginActivity.token+"\"}");
+//            	flag_type = socLOGIN;
+//        		mWebSocketClient.send("{\"type\":\"subscribe\",\"_token\":\""+LoginActivity.token+"\"}");
+            	socLogin();
         		isTracking = 1;
             }
 
@@ -505,6 +536,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                     		int _index1 = 0;
                     		if(_index!=-1)
                     		{
+                    			flag_stop_game = 1;
                     			_index1 = message.indexOf("\"", _index+5);
                     			_id_value = message.substring(_index+5, _index1);
                     			
@@ -519,23 +551,24 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                 					
                 					int index = message.indexOf(pos);
                 					int index1 = 0;
-                					int i = 1;
+                					
                 					if(index!=-1)
                 					{
                 						GetHttp.PosIndex[temp]=index;
                 					}
                 					
-                					index = message.indexOf(stage);
-                					if(index!=-1)
-                					{
-                						GetHttp.StageIndex[temp]=index;
-                					}
+//                					index = message.indexOf(stage);
+//                					if(index!=-1)
+//                					{
+//                						GetHttp.StageIndex[temp]=index;
+//                					}
                 					index = message.indexOf(address);
                 					if(index!=-1)
                 					{
                 						GetHttp.BTAddressIndex[temp]=index;
                 					}
                 					GetHttp._Online[temp]=true;
+                					GetHttp._stage[temp] = GetHttp.FREE;
                 					
                 					if(!message.substring(GetHttp.PosIndex[temp]+10,GetHttp.PosIndex[temp]+14).equals("null"))
     								{
@@ -555,19 +588,19 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
     									GetHttp._Long[temp]="null";
     								}
                 					
-                					if(GetHttp.StageIndex[temp]!=-1)
-        							{
-        								Log.d("status","\n stage index"+temp+":"+message.substring(GetHttp.StageIndex[temp]+8,GetHttp.StageIndex[temp]+12));
-        								index = message.indexOf("\"",GetHttp.StageIndex[temp]+8);
-        								if(message.substring(GetHttp.StageIndex[temp]+8,index).equals("free"))
-        								{
-        									GetHttp._detailStage[temp] = GetHttp._FREE;
-        									GetHttp._stage[temp] = GetHttp.FREE;
-        									
-        								}
-        								
-        								Log.d("post", "Stage_player"+temp+":"+GetHttp._detailStage[temp]);
-        							}
+//                					if(GetHttp.StageIndex[temp]!=-1)
+//        							{
+//        								Log.d("status","\n stage index"+temp+":"+message.substring(GetHttp.StageIndex[temp]+8,GetHttp.StageIndex[temp]+12));
+//        								index = message.indexOf("\"",GetHttp.StageIndex[temp]+8);
+//        								if(message.substring(GetHttp.StageIndex[temp]+8,index).equals("free"))
+//        								{
+//        									GetHttp._detailStage[temp] = GetHttp._FREE;
+//        									GetHttp._stage[temp] = GetHttp.FREE;
+//        									
+//        								}
+//        								
+//        								Log.d("post", "Stage_player"+temp+":"+GetHttp._detailStage[temp]);
+//        							}
                 					
                 					if(GetHttp.BTAddressIndex[temp]!=-1)
         							{
@@ -588,12 +621,16 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                     			}
                     			else
                     				{
-                    					for(int index=_startIndex;index<_endIndex;index++)
+                    					for(int index=0;index<_endIndex;index++)
                     					{
                     						validMarker[index]=false;
                     					}
                     				
                     				}
+                    		}
+                    		else
+                    		{
+                    			flag_stop_game = 0;
                     		}
         					flag_channel = false;
         					GetHttp.flag_update = true;
@@ -611,6 +648,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
         					String pos = "position";
         					String onl = "is_online";
 
+        					flag_stop_game = 1;
         					int index = message.indexOf(pos);
         					int index1 = 0;
         					int i = 1;
@@ -788,87 +826,134 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
                     	else if((type_value.equals(type_fight))||(type_value.equals(type_hit))||(type_value.equals(type_withdraw)))
                     	{
                     		Log.d("socket","hunter target:"+message);
+                    		
                     		flag_type = socFIGHT;
                     		String _id_value="";
                     		int _index = message.indexOf("hunter");
                     		int _index1 = 0;
-                    		
                     		if(_index!=-1)
                     		{
+                    			if((type_value.equals(type_fight))&&(GetHttp.choseTarget == true))
+                    			{
+                    				
+									targetId = GetHttp.cntUserId;
+									Log.d("fight","target id:"+targetId);
+									device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
+									mChatService.connect(device, true);		
+									rssi_value.setText("Out of range");
+									role=HUNTER;
+									mTestButton.setVisibility(View.VISIBLE);
+									Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show(); 
+								
+                    			}
+                    			flag_stop_game = 1;
                     			_index1 = message.indexOf("\"", _index+15);
+                    			Log.d("hunter","id:"+message.substring(_index+15, _index1));
                     			_id_value = message.substring(_index+15, _index1);
-                    			temp_hunter = Integer.parseInt(_id_value);
+                    			try{
+                    				temp_hunter = Integer.parseInt(_id_value);
+                    			}
+                    			catch(NumberFormatException e)
+                    			{
+                    				Log.d("target","id:"+message.substring(_index+15, _index1));
+                    			}
+                    			
+                    			_index = message.indexOf("target");
+	                    		if(_index!=-1)
+	                    		{
+	                    			_index1 = message.indexOf("\"", _index+15);
+	                    			Log.d("target","id:"+message.substring(_index+15, _index1));
+	                    			_id_value = message.substring(_index+15, _index1);
+	                    			try{
+	                    				temp_target = Integer.parseInt(_id_value);
+	                    			}
+	                    			catch(NumberFormatException e)
+	                    			{
+	                    				Log.d("target","id:"+message.substring(_index+15, _index1));
+	                    			}
+	                    		}
+	
+	        					String pos = "position";
+	        					
+	        					_index = message.indexOf(pos);
+	        					_index1 = 0;
+	
+	        					if(_index!=-1)
+	        					{
+	        						GetHttp.PosIndex[temp_hunter]=_index;
+	        					}
+	        					_index = message.indexOf(pos, _index+1);
+	        					if(_index!=-1)
+	        						GetHttp.PosIndex[temp_target]=_index;
+	        					
+	        					GetHttp._Online[temp_hunter]=true;
+	        					GetHttp._Online[temp_target]=true;
+	        					if(type_value.equals(type_fight))
+								{
+	        						GetHttp._stage[temp_hunter] = GetHttp.NOT_FREE;
+		        					GetHttp._stage[temp_target] = GetHttp.NOT_FREE;
+		        					GetHttp._detailStage[temp_hunter]=GetHttp._HUNTING;
+		        					GetHttp._detailStage[temp_target]=GetHttp._BE_TARGETED;
+								}
+	        					else if(type_value.equals(type_hit)||type_value.equals(type_withdraw))
+	        					{
+		        					GetHttp._stage[temp_hunter] = GetHttp.FREE;
+		        					GetHttp._stage[temp_target] = GetHttp.FREE;
+	        					}
+	        					
+	        					
+	        					if(!message.substring(GetHttp.PosIndex[temp_hunter]+10,GetHttp.PosIndex[temp_hunter]+14).equals("null"))
+								{
+									
+									_index=message.indexOf("\"",GetHttp.PosIndex[temp_hunter]+23);
+									GetHttp._Lat[temp_hunter]=message.substring(GetHttp.PosIndex[temp_hunter]+23,_index);
+									_index1 = _index+15;
+									_index = message.indexOf("\"",_index1);
+									GetHttp._Long[temp_hunter]=message.substring(_index1,_index);
+									
+									Log.d("post", "Lat_player"+temp_hunter+":"+GetHttp._Lat[temp_hunter]);
+									Log.d("post", "Long_player"+temp_hunter+":"+GetHttp._Long[temp_hunter]);
+								}
+								else
+								{
+									GetHttp._Lat[temp_hunter]="null";
+									GetHttp._Long[temp_hunter]="null";
+								}
+	        					
+	        					if(!message.substring(GetHttp.PosIndex[temp_target]+10,GetHttp.PosIndex[temp_target]+14).equals("null"))
+								{
+									
+									_index=message.indexOf("\"",GetHttp.PosIndex[temp_target]+23);
+									GetHttp._Lat[temp_target]=message.substring(GetHttp.PosIndex[temp_target]+23,_index);
+									_index1 = _index+15;
+									_index = message.indexOf("\"",_index1);
+									GetHttp._Long[temp_target]=message.substring(_index1,_index);
+									
+									Log.d("post", "Lat_player"+temp_target+":"+GetHttp._Lat[temp_target]);
+									Log.d("post", "Long_player"+temp_target+":"+GetHttp._Long[temp_target]);
+								}
+								else
+								{
+									GetHttp._Lat[temp_target]="null";
+									GetHttp._Long[temp_target]="null";
+								}
+	        					
+	        					for(int index2=_startIndex;index2<_endIndex;index2++)
+	        					{
+	        						validMarker[index2]=false;
+	        					}
+	        					validMarker[temp_hunter]=true;
+	        					validMarker[temp_target]=true;
                     		}
-                    		_index = message.indexOf("target");
-                    		_index1 = 0;
-                    		if(_index!=-1)
+                    		else
                     		{
-                    			_index1 = message.indexOf("\"", _index+15);
-                    			_id_value = message.substring(_index+15, _index1);
-                    			temp_target = Integer.parseInt(_id_value);
+                    			if(targetId == GetHttp.cntUserId)
+                    			{
+                    				GetHttp.choseTarget = false;
+                    				targetId = 0;
+                    			}
+                    			flag_stop_game = 0;
                     		}
-                    		
-                    		String stage ="stage";
-        					String address="bluetooth_address";
-        					String pos = "position";
-        					
-        					int index = message.indexOf(pos);
-        					int index1 = 0;
-        					int i = 1;
-        					if(index!=-1)
-        					{
-        						GetHttp.PosIndex[temp_hunter]=index;
-        					}
-        					index = message.indexOf(pos, index+1);
-        					if(index!=-1)
-        						GetHttp.PosIndex[temp_target]=index;
-        					
-        					GetHttp._Online[temp_hunter]=true;
-        					GetHttp._Online[temp_target]=true;
-        					GetHttp._stage[temp_hunter] = GetHttp.FREE;
-        					GetHttp._stage[temp_target] = GetHttp.FREE;
-        					
-        					
-        					if(!message.substring(GetHttp.PosIndex[temp_hunter]+10,GetHttp.PosIndex[temp_hunter]+14).equals("null"))
-							{
-								
-								index=message.indexOf("\"",GetHttp.PosIndex[temp_hunter]+23);
-								GetHttp._Lat[temp_hunter]=message.substring(GetHttp.PosIndex[temp_hunter]+23,index);
-								index1 = index+15;
-								index = message.indexOf("\"",index1);
-								GetHttp._Long[temp_hunter]=message.substring(index1,index);
-								
-								Log.d("post", "Lat_player"+temp_hunter+":"+GetHttp._Lat[temp_hunter]);
-								Log.d("post", "Long_player"+temp_hunter+":"+GetHttp._Long[temp_hunter]);
-							}
-							else
-							{
-								GetHttp._Lat[temp_hunter]="null";
-								GetHttp._Long[temp_hunter]="null";
-							}
-        					
-        					if(!message.substring(GetHttp.PosIndex[temp_target]+10,GetHttp.PosIndex[temp_target]+14).equals("null"))
-							{
-								
-								index=message.indexOf("\"",GetHttp.PosIndex[temp_target]+23);
-								GetHttp._Lat[temp_target]=message.substring(GetHttp.PosIndex[temp_target]+23,index);
-								index1 = index+15;
-								index = message.indexOf("\"",index1);
-								GetHttp._Long[temp_target]=message.substring(index1,index);
-								
-								Log.d("post", "Lat_player"+temp_target+":"+GetHttp._Lat[temp_target]);
-								Log.d("post", "Long_player"+temp_target+":"+GetHttp._Long[temp_target]);
-							}
-							else
-							{
-								GetHttp._Lat[temp_target]="null";
-								GetHttp._Long[temp_target]="null";
-							}
-        					
-        					for(int index2=_startIndex;index2<_endIndex;index2++)
-        					{
-        						validMarker[index2]=false;
-        					}
         					
         					flag_channel = false;
         					GetHttp.flag_update = true;
@@ -892,26 +977,35 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
             			locationA.setLatitude(myLat);
             			Location locationB = new Location("point B");
             			float distance[] = new float[4];
-  
-            	        BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
-            	        BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+            			
+            			BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.fromResource(R.drawable.pin_blue);
+            			BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.fromResource(R.drawable.pin_red);
+//            	        BitmapDescriptor bitmapDesFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE);
+//            	        BitmapDescriptor bitmapDesNotFree = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
             	        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
             	        int flag_hunter = 0;
             	        if(GetHttp.flag_update==true)
             	        {
 //            	        	if(flag_type == socTRACKING)
+            	        	if(flag_stop_game==1)
             	        	{
 	            	        	mMap.clear();
-	            	        	LatLng[] latLngArr = new LatLng[11];
+	            	        	myLocation = mMap.addMarker(new MarkerOptions()
+	            		        .position(new LatLng(myLat,myLong))
+	            		        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow)));
 	            	        	
+	            	        	LatLng[] latLngArr = new LatLng[11];
+	            	        	flag_hunter=0;
 	            	        	for(int index=_startIndex;index<_endIndex;index++)
 	            	        	{
 	            	        		if(flag_type==socLOGIN)
 	            	        		{
+	            	        			Log.e("flag_type","login id:"+temp);
 	            	        			index = temp;
 	            	        		}
 	            	        		else if(flag_type==socFIGHT)
 	            	        		{
+	            	        			Log.e("flag_type","fight id:hunter:"+temp_hunter+",target:"+temp_target);
 	            	        			if(flag_hunter==0)
 	            	        			{
 	            	        				index=temp_hunter;
@@ -921,12 +1015,19 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	            	        				index=temp_target;
 	            	        			
 	            	        		}
-	            	        		
+	            	        		Log.d("index","index"+index);
 	            	        		if(index!=LoginActivity.id)
 	            	        		{
 	            	        			try
 	            	    	        	{
-	            	        				latLngArr[index]= new LatLng(Double.parseDouble(GetHttp._Lat[index]),Double.parseDouble(GetHttp._Long[index]));
+	            	        				Log.e("location","index:"+index+
+	            	        							"lat:"+GetHttp._Lat[index]+",long:"+GetHttp._Long[index]);
+	            	        				if(!GetHttp._Lat[index].equals("null"))
+	            	        				{
+	            	        					latLngArr[index]= new LatLng(Double.parseDouble(GetHttp._Lat[index]),Double.parseDouble(GetHttp._Long[index]));
+	            	        				}
+	            	        				else
+	            	        					latLngArr[index]= new LatLng(0,0);
 	            	    	        	}
 	            	    	        	catch(NumberFormatException e)
 	            	    	        	{
@@ -937,8 +1038,13 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	            	        		}
 	            	        		if(flag_type==socLOGIN)
 	            	        		{
-	            	        			index = _endIndex-1;
+	            	        			index = _endIndex;
 	            	        		}
+	            	        		if((flag_type==socFIGHT)&&(flag_hunter==1))
+	            	     			{
+	            	     				index = _endIndex;
+	            	     			}
+	            	        		
 	            	        	}
 	            	        	flag_hunter = 0;
 	            	        	int j = 0;
@@ -967,7 +1073,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	            					else
 	            						j=index%6-1;
 	            					
-	            					validMarker[index] = false;
+	            					
 	            	     			if((index!=LoginActivity.id)&&(GetHttp._Online[index]==true))
 	            					{
 	            						if(GetHttp._stage[index]==GetHttp.FREE)
@@ -1069,6 +1175,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	            					}
 	            	     			else if((index!=LoginActivity.id)&&(GetHttp._Online[index]==false))
 	            	     			{
+	            	     				validMarker[index] = false;
+	            	     				targetText[j].setTextColor(Color.parseColor("#ff0000"));
+	            	     				distanceText[j].setTextColor(Color.parseColor("#ff0000"));
             	     					targetText[j].setText("PlayerOther:");
 		            	     			distanceText[j].setText("Offline");
 	            	     				
@@ -1082,65 +1191,28 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 	            	     			
 	            	     			if(flag_type==socLOGIN)
 	            	        		{
-	            	        			index = _endIndex-1;
+	            	        			index = _endIndex;
 	            	        		}
+	            	     			if((flag_type==socFIGHT)&&(flag_hunter==1))
+	            	     			{
+	            	     				index = _endIndex;
+	            	     			}
 	            					
 	            				}
+	            				flag_stop_game = 0;
             	        	}
-//            	        	else if(flag_type==socLOGIN)
-//            	        	{
-//            	        		LatLng latLngNew = new LatLng(0,0);
-//            	        		Log.e("new user","new user position"+GetHttp._Lat[temp]+","+GetHttp._Long[temp]);
-//            	        		try
-//        	    	        	{
-//            	        			latLngNew= new LatLng(Double.parseDouble(GetHttp._Lat[temp]),Double.parseDouble(GetHttp._Long[temp]));
-//        	    	        	}
-//        	    	        	catch(NumberFormatException e)
-//        	    	        	{
-//        	    	        	  //not a double
-//        	    	        		latLngNew= new LatLng(0,0);
-//        	    	        	}
-//            	        		if(!latLngNew.equals(new LatLng(0,0)))
-//    							{
-//    							
-//    						        MarkerArr[temp]= mMap.addMarker(new MarkerOptions()
-//    						        .position(latLngNew)
-//    						        .icon(bitmapDesFree)
-//    						        .title("player"+temp));
-//    						        MarkerArr[temp].showInfoWindow();
-//    						        
-//    						        validMarker[temp] = true;
-//    							}
-//    							else
-//    								validMarker[temp] = false;
-//            	        		if(!latLngNew.equals(new LatLng(0,0)))
-//    							{
-//    								
-//            	        			targetText[0].setTextColor(Color.parseColor("#0000ff"));
-//            	        			targetText[0].setText("Player"+temp+":");
-//    									locationB.setLatitude(latLngNew.latitude);
-//    							        locationB.setLongitude(latLngNew.longitude);
-//    							        Log.e("MyLocation",myLong + "    " + myLat);
-//    							        Log.e("OtherLocation",latLngNew.longitude + "    " + latLngNew.latitude);
-//    							        distance[0] = locationA.distanceTo(locationB);
-//    							        distanceText[0].setTextColor(Color.parseColor("#0000ff"));
-//    							        distanceText[0].setText(String.valueOf(new DecimalFormat("##.##").format(distance[0]))+" m");
-//    							        Log.e("distance","distance"+temp+":"+String.valueOf(distance[0]));
-//    							        
-//    							        if(LoginActivity.id == temp)
-//    							        {
-//    							        	pre_LatLng = new LatLng(0,0);
-//    							        }
-//    								
-//    							}
-//            	        		
-//            	        	}
+            	        	else
+            	        	{
+            	        		Toast.makeText(getApplicationContext(),"Please wait!", Toast.LENGTH_SHORT)
+								.show();
+            	        	}
             
             		        GetHttp.flag_update = false;
             		        Log.d("update", "+ update completed");
             		        Log.d("update", "+ Flag update:"+GetHttp.flag_update);
             		        
             		        flag_type = socNONE;
+            		        
             	        }
                     flag_proc_mess = false;
                     }
@@ -1180,7 +1252,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			}
 			ensureDiscoverable();
 		}
-//		socLogin();
 	}
 
 	@Override
@@ -1201,10 +1272,15 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 				mChatService.start();
 			}
 		}
+    		// Register this class as a listener for the accelerometer sensor
+//		sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+//		                    SensorManager.SENSOR_DELAY_GAME);
+		// ...and the orientation sensor
+		sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+		                    SensorManager.SENSOR_DELAY_GAME);
 	}
 	
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onBackPressed() {
 		Log.i(TAG, "onBackPressed() menthod");
@@ -1226,7 +1302,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 									Log.e(TAG,
 											"----------------- service STOP ------------------");
 								}
-								
+								socWithdraw();
 								locationManager.removeUpdates(locationListener);;
 								targetId = 0;
 				                GetHttp.choseTarget=false;
@@ -1244,8 +1320,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 								handle_blinkScreen.removeCallbacks(blinkingScreen);
 								Log.i(TAG, "front finish() menthod");
 								 mWebSocketClient.close();
-//								mChatService = null;
-								
 								finish();
 							}
 						})
@@ -1295,7 +1369,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 						sendMessage(message);
 						flag_play_update = UNCOMPLETED;
 						mResultButton.setVisibility(View.INVISIBLE);
-						mTestButton.setVisibility(View.INVISIBLE);
+						if(mTestButton.getVisibility()==View.VISIBLE)
+							mTestButton.setVisibility(View.INVISIBLE);
 					}
 					else
 					{
@@ -1368,23 +1443,20 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 									new DialogInterface.OnClickListener() {
 										public void onClick(DialogInterface dialog, int id) {
 											
-											socWithdraw();
-											
 											flag_shoot = 0;
 							                flag_win = 1;
 							                flag_play = 0;
-							                targetId = 0;
-							                //
-							                //
+							                
 							                resetCommandIsTrue = true;
 											String message = "new session";
 											sendMessage = message;
 											sendMessage(message);
 							                //
+											targetId = 0;
 							                GetHttp.choseTarget=false;
 					    					mTestButton.setVisibility(View.INVISIBLE);
 					    					setStatus(R.string.title_no_play);
-
+					    					socWithdraw();
 										}
 									})
 								.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -1476,6 +1548,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		super.onPause();
 		if (D)
 			Log.e(TAG, "- ON PAUSE -");
+    sm.unregisterListener(this);
 	}
 
 	@Override
@@ -1506,23 +1579,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		}
 	}
 
-	private void btNotEnalbe() {
-		
-
-		if (mChatService.getState() != BluetoothService.STATE_CONNECTED) {
-
-			Toast.makeText(this, R.string.not_connected, Toast.LENGTH_SHORT)
-					.show();
-			mWarningText.setText(" ");
-			return;
-		} else {
-//			flag_play = 1;
-			mPlayButton.setEnabled(false);
-			localPlayIsPressed = true;
-			sendMessage("remote Play bt is pressed");
-			mWarningText.setText(" ");
-		}
-	}
 
 	/**
 	 * Sends a message.
@@ -1548,22 +1604,6 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		}
 	}
 
-	// The action listener for the EditText widget, to listen for the return key
-	private TextView.OnEditorActionListener mWriteListener = new TextView.OnEditorActionListener() {
-		public boolean onEditorAction(TextView view, int actionId,
-				KeyEvent event) {
-			// If the action is a key-up event on the return key, send the
-			// message
-			if (actionId == EditorInfo.IME_NULL
-					&& event.getAction() == KeyEvent.ACTION_UP) {
-				String message = view.getText().toString();
-				sendMessage(message);
-			}
-			if (D)
-				Log.i(TAG, "END onEditorAction");
-			return true;
-		}
-	};
 	ActionBar actionBar;
 	private final void setStatus(int resId) {
 		actionBar = getActionBar();
@@ -1774,6 +1814,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 			LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 			myLong = location.getLongitude();
 			myLat = location.getLatitude();
+			myLocation = mMap.addMarker(new MarkerOptions()
+	        .position(new LatLng(myLat,myLong))
+	        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow)));
 			if(zoomMap==false)
         	{
 				Log.d("zoom","zoom 15");
@@ -2061,13 +2104,13 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 												mWebSocketClient.send("{\"type\":\"fight\",\"target\":\""+GetHttp.cntUserId+"\"}");
 												GetHttp.choseTarget = true;
 												targetId = GetHttp.cntUserId;
-												Log.d("fight","target id:"+targetId);
-												device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
-												mChatService.connect(device, true);		
-												rssi_value.setText("Out of range");
-												role=HUNTER;
-												mTestButton.setVisibility(View.VISIBLE);
-												Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show(); 
+//												Log.d("fight","target id:"+targetId);
+//												device = mBluetoothAdapter.getRemoteDevice(GetHttp._BTAddress[GetHttp.cntUserId]);
+//												mChatService.connect(device, true);		
+//												rssi_value.setText("Out of range");
+//												role=HUNTER;
+//												mTestButton.setVisibility(View.VISIBLE);
+//												Toast.makeText(getBaseContext(),"Your target is chosen: player"+targetId, Toast.LENGTH_LONG).show(); 
 											}
 										})
 								.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -2137,5 +2180,42 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener{
 		   }
 	};
 	
+    
+	//sensor listener
+	@Override
+	public void onSensorChanged(SensorEvent sensorEvent) {
+    	// get the angle around the z-axis rotated
+        degree = Math.round(sensorEvent.values[0]);
+        myLocation.setRotation(degree);
+
+
+	}
+	//
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// TODO Auto-generated method stub
+		
+	}
 	
+	public void rotateDrawable(float angle)
+	{
+	  Bitmap arrowBitmap = BitmapFactory.decodeResource(this.getResources(), 
+	                                                    R.drawable.pin_arrow);
+	  // Create blank bitmap of equal size
+	  Bitmap canvasBitmap = arrowBitmap.copy(Bitmap.Config.ARGB_8888, true);
+	  canvasBitmap.eraseColor(0x00000000);
+
+	  // Create canvas
+	  Canvas canvas = new Canvas(canvasBitmap);
+
+	  // Create rotation matrix
+	  Matrix rotateMatrix = new Matrix();
+	  rotateMatrix.setRotate(angle, canvas.getWidth()/2, canvas.getHeight()/2);
+
+	  // Draw bitmap onto canvas using matrix
+	  canvas.drawBitmap(arrowBitmap, rotateMatrix, null);
+
+	  //return new BitmapDrawable(canvasBitmap); 
+	}
 }

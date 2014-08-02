@@ -180,7 +180,10 @@ containing a value of this type.
         public static final int icon=0x7f020020;
         public static final int marker=0x7f020021;
         public static final int marker2=0x7f020022;
-        public static final int win=0x7f020023;
+        public static final int pin_arrow=0x7f020023;
+        public static final int pin_blue=0x7f020024;
+        public static final int pin_red=0x7f020025;
+        public static final int win=0x7f020026;
     }
     public static final class id {
         public static final int LinearLayout1=0x7f050010;

@@ -59,7 +59,10 @@ int drawable ic_plusone_tall_off_client 0x7f02001f
 int drawable icon 0x7f020020
 int drawable marker 0x7f020021
 int drawable marker2 0x7f020022
-int drawable win 0x7f020023
+int drawable pin_arrow 0x7f020023
+int drawable pin_blue 0x7f020024
+int drawable pin_red 0x7f020025
+int drawable win 0x7f020026
 int id LinearLayout1 0x7f050010
 int id PassText 0x7f050015
 int id UserText 0x7f050014
