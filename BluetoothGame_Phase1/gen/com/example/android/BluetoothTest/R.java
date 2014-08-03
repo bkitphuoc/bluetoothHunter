@@ -180,10 +180,12 @@ containing a value of this type.
         public static final int icon=0x7f020020;
         public static final int marker=0x7f020021;
         public static final int marker2=0x7f020022;
-        public static final int pin_arrow=0x7f020023;
-        public static final int pin_blue=0x7f020024;
-        public static final int pin_red=0x7f020025;
-        public static final int win=0x7f020026;
+        public static final int pin_arrow_blue=0x7f020023;
+        public static final int pin_arrow_red=0x7f020024;
+        public static final int pin_blue=0x7f020025;
+        public static final int pin_red=0x7f020026;
+        public static final int pin_red_main=0x7f020027;
+        public static final int win=0x7f020028;
     }
     public static final class id {
         public static final int LinearLayout1=0x7f050010;
@@ -237,6 +239,9 @@ containing a value of this type.
         public static final int value=0x7f05001f;
         public static final int valuerssi=0x7f05002c;
     }
+    public static final class integer {
+        public static final int google_play_services_version=0x7f070000;
+    }
     public static final class layout {
         public static final int circle_progress_bar=0x7f030000;
         public static final int custom_title=0x7f030001;
@@ -251,7 +256,7 @@ containing a value of this type.
         public static final int register=0x7f03000a;
     }
     public static final class menu {
-        public static final int option_menu=0x7f070000;
+        public static final int option_menu=0x7f080000;
     }
     public static final class string {
         public static final int app_name=0x7f060019;

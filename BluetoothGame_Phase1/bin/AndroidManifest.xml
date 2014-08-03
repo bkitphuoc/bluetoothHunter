@@ -28,6 +28,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"  />
+    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION"/>
     <uses-permission android:name="com.example.android.BluetoothChat.permission.MAPS_RECEIVE" />    
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_LOGS"/>
@@ -111,6 +112,10 @@
 		<meta-data
 		android:name="com.google.android.maps.v2.API_KEY"
 		android:value="AIzaSyBU6PkkDUcEJlC5wcxwW_JQnXWeyEK27ug"/>
+		
+		<meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
     </application>
 

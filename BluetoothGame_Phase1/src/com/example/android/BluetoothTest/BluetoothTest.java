@@ -167,6 +167,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 	static Boolean flag_resultbtn = false;
 	static Boolean flag_channel = false;
 	static Boolean flag_proc_mess = false;
+	static Boolean flag_firt_update_map = false;
 	
 	// variable
 	private String mConnectedDeviceName = null;
@@ -241,6 +242,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 		flag_play_update = NO_UPDATE;
 		flag_login = 0;
 		flag_type = socNONE;
+		flag_proc_mess = false;
+		flag_firt_update_map = false;
 		
 		//bluetooth
 		localPlayIsPressed = false;
@@ -873,78 +876,81 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 	                    				Log.d("target","id:"+message.substring(_index+15, _index1));
 	                    			}
 	                    		}
-	
-	        					String pos = "position";
+	                    		if(temp_target>=_startIndex && temp_target<_endIndex)
+	                    		{
+	                    			String pos = "position";
+		        					
+		        					_index = message.indexOf(pos);
+		        					_index1 = 0;
+		
+		        					if(_index!=-1)
+		        					{
+		        						GetHttp.PosIndex[temp_hunter]=_index;
+		        					}
+		        					_index = message.indexOf(pos, _index+1);
+		        					if(_index!=-1)
+		        						GetHttp.PosIndex[temp_target]=_index;
+		        					
+		        					GetHttp._Online[temp_hunter]=true;
+		        					GetHttp._Online[temp_target]=true;
+		        					if(type_value.equals(type_fight))
+									{
+		        						GetHttp._stage[temp_hunter] = GetHttp.NOT_FREE;
+			        					GetHttp._stage[temp_target] = GetHttp.NOT_FREE;
+			        					GetHttp._detailStage[temp_hunter]=GetHttp._HUNTING;
+			        					GetHttp._detailStage[temp_target]=GetHttp._BE_TARGETED;
+									}
+		        					else if(type_value.equals(type_hit)||type_value.equals(type_withdraw))
+		        					{
+			        					GetHttp._stage[temp_hunter] = GetHttp.FREE;
+			        					GetHttp._stage[temp_target] = GetHttp.FREE;
+		        					}
+		        					
+		        					
+		        					if(!message.substring(GetHttp.PosIndex[temp_hunter]+10,GetHttp.PosIndex[temp_hunter]+14).equals("null"))
+									{
+										
+										_index=message.indexOf("\"",GetHttp.PosIndex[temp_hunter]+23);
+										GetHttp._Lat[temp_hunter]=message.substring(GetHttp.PosIndex[temp_hunter]+23,_index);
+										_index1 = _index+15;
+										_index = message.indexOf("\"",_index1);
+										GetHttp._Long[temp_hunter]=message.substring(_index1,_index);
+										
+										Log.d("post", "Lat_player"+temp_hunter+":"+GetHttp._Lat[temp_hunter]);
+										Log.d("post", "Long_player"+temp_hunter+":"+GetHttp._Long[temp_hunter]);
+									}
+									else
+									{
+										GetHttp._Lat[temp_hunter]="null";
+										GetHttp._Long[temp_hunter]="null";
+									}
+		        					
+		        					if(!message.substring(GetHttp.PosIndex[temp_target]+10,GetHttp.PosIndex[temp_target]+14).equals("null"))
+									{
+										
+										_index=message.indexOf("\"",GetHttp.PosIndex[temp_target]+23);
+										GetHttp._Lat[temp_target]=message.substring(GetHttp.PosIndex[temp_target]+23,_index);
+										_index1 = _index+15;
+										_index = message.indexOf("\"",_index1);
+										GetHttp._Long[temp_target]=message.substring(_index1,_index);
+										
+										Log.d("post", "Lat_player"+temp_target+":"+GetHttp._Lat[temp_target]);
+										Log.d("post", "Long_player"+temp_target+":"+GetHttp._Long[temp_target]);
+									}
+									else
+									{
+										GetHttp._Lat[temp_target]="null";
+										GetHttp._Long[temp_target]="null";
+									}
+		        					
+		        					for(int index2=_startIndex;index2<_endIndex;index2++)
+		        					{
+		        						validMarker[index2]=false;
+		        					}
+		        					validMarker[temp_hunter]=true;
+		        					validMarker[temp_target]=true;
+	                    		}
 	        					
-	        					_index = message.indexOf(pos);
-	        					_index1 = 0;
-	
-	        					if(_index!=-1)
-	        					{
-	        						GetHttp.PosIndex[temp_hunter]=_index;
-	        					}
-	        					_index = message.indexOf(pos, _index+1);
-	        					if(_index!=-1)
-	        						GetHttp.PosIndex[temp_target]=_index;
-	        					
-	        					GetHttp._Online[temp_hunter]=true;
-	        					GetHttp._Online[temp_target]=true;
-	        					if(type_value.equals(type_fight))
-								{
-	        						GetHttp._stage[temp_hunter] = GetHttp.NOT_FREE;
-		        					GetHttp._stage[temp_target] = GetHttp.NOT_FREE;
-		        					GetHttp._detailStage[temp_hunter]=GetHttp._HUNTING;
-		        					GetHttp._detailStage[temp_target]=GetHttp._BE_TARGETED;
-								}
-	        					else if(type_value.equals(type_hit)||type_value.equals(type_withdraw))
-	        					{
-		        					GetHttp._stage[temp_hunter] = GetHttp.FREE;
-		        					GetHttp._stage[temp_target] = GetHttp.FREE;
-	        					}
-	        					
-	        					
-	        					if(!message.substring(GetHttp.PosIndex[temp_hunter]+10,GetHttp.PosIndex[temp_hunter]+14).equals("null"))
-								{
-									
-									_index=message.indexOf("\"",GetHttp.PosIndex[temp_hunter]+23);
-									GetHttp._Lat[temp_hunter]=message.substring(GetHttp.PosIndex[temp_hunter]+23,_index);
-									_index1 = _index+15;
-									_index = message.indexOf("\"",_index1);
-									GetHttp._Long[temp_hunter]=message.substring(_index1,_index);
-									
-									Log.d("post", "Lat_player"+temp_hunter+":"+GetHttp._Lat[temp_hunter]);
-									Log.d("post", "Long_player"+temp_hunter+":"+GetHttp._Long[temp_hunter]);
-								}
-								else
-								{
-									GetHttp._Lat[temp_hunter]="null";
-									GetHttp._Long[temp_hunter]="null";
-								}
-	        					
-	        					if(!message.substring(GetHttp.PosIndex[temp_target]+10,GetHttp.PosIndex[temp_target]+14).equals("null"))
-								{
-									
-									_index=message.indexOf("\"",GetHttp.PosIndex[temp_target]+23);
-									GetHttp._Lat[temp_target]=message.substring(GetHttp.PosIndex[temp_target]+23,_index);
-									_index1 = _index+15;
-									_index = message.indexOf("\"",_index1);
-									GetHttp._Long[temp_target]=message.substring(_index1,_index);
-									
-									Log.d("post", "Lat_player"+temp_target+":"+GetHttp._Lat[temp_target]);
-									Log.d("post", "Long_player"+temp_target+":"+GetHttp._Long[temp_target]);
-								}
-								else
-								{
-									GetHttp._Lat[temp_target]="null";
-									GetHttp._Long[temp_target]="null";
-								}
-	        					
-	        					for(int index2=_startIndex;index2<_endIndex;index2++)
-	        					{
-	        						validMarker[index2]=false;
-	        					}
-	        					validMarker[temp_hunter]=true;
-	        					validMarker[temp_target]=true;
                     		}
                     		else
                     		{
@@ -987,6 +993,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
             	        int flag_hunter = 0;
             	        if(GetHttp.flag_update==true)
             	        {
+            	        	for(int index2=_startIndex;index2<_endIndex;index2++)
+        					{
+        						validMarker[index2]=false;
+        					}
 //            	        	if(flag_type == socTRACKING)
             	        	if(flag_stop_game==1)
             	        	{
@@ -1003,27 +1013,36 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 	            	        		if(flag_type==socLOGIN)
 	            	        		{
 	            	        			Log.e("flag_type","login id:"+temp);
-	            	        			index = temp;
+//	            	        			if(temp>=_startIndex && temp<_endIndex)
+	            	        			{
+	            	        				index = temp;
+	            	        			}
+//	            	        			else
+//	            	        				return;
 	            	        		}
 	            	        		else if(flag_type==socFIGHT)
 	            	        		{
 	            	        			Log.e("flag_type","fight id:hunter:"+temp_hunter+",target:"+temp_target);
-	            	        			if(flag_hunter==0)
+//	            	        			if(temp_hunter>=_startIndex && temp_hunter < _endIndex)
 	            	        			{
-	            	        				index=temp_hunter;
-	            	        				flag_hunter = 1;
+		            	        			if(flag_hunter==0)
+		            	        			{
+		            	        				index=temp_hunter;
+		            	        				flag_hunter = 1;
+		            	        			}
+		            	        			else
+		            	        				index=temp_target;
 	            	        			}
-	            	        			else
-	            	        				index=temp_target;
-	            	        			
+//	            	        			else
+//	            	        				return;
 	            	        		}
 	            	        		Log.d("index","index"+index);
-	            	        		if(index!=LoginActivity.id)
+	            	        		if((index!=LoginActivity.id)&&(index>=_startIndex)&&(index<_endIndex))
 	            	        		{
 	            	        			try
 	            	    	        	{
-	            	        				Log.e("location","index:"+index+
-	            	        							"lat:"+GetHttp._Lat[index]+",long:"+GetHttp._Long[index]);
+//	            	        				Log.e("location","index:"+index+
+//	            	        							"lat:"+GetHttp._Lat[index]+",long:"+GetHttp._Long[index]);
 	            	        				if(!GetHttp._Lat[index].equals("null"))
 	            	        				{
 	            	        					latLngArr[index]= new LatLng(Double.parseDouble(GetHttp._Lat[index]),Double.parseDouble(GetHttp._Long[index]));
@@ -1054,29 +1073,51 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 	            				{
 	            					if(flag_type==socLOGIN)
 	            	        		{
-	            	        			index = temp;
-	            	        		}
-	            					else if(flag_type==socFIGHT)
-	            	        		{
-	            	        			if(flag_hunter==0)
+	            	        			Log.e("flag_type","login id:"+temp);
+//	            	        			if(temp>=_startIndex && temp<_endIndex)
 	            	        			{
-	            	        				index=temp_hunter;
-	            	        				flag_hunter = 1;
+	            	        				index = temp;
 	            	        			}
-	            	        			else
-	            	        				index=temp_target;
-	            	        			
+//	            	        			else
+//	            	        				return;
 	            	        		}
-	            					
-	            					if(index<LoginActivity.id)
+	            	        		else if(flag_type==socFIGHT)
+	            	        		{
+	            	        			Log.e("flag_type","fight id:hunter:"+temp_hunter+",target:"+temp_target);
+//	            	        			if(temp_hunter>=_startIndex && temp_hunter < _endIndex)
+	            	        			{
+		            	        			if(flag_hunter==0)
+		            	        			{
+		            	        				index=temp_hunter;
+		            	        				flag_hunter = 1;
+		            	        			}
+		            	        			else
+		            	        				index=temp_target;
+	            	        			}
+//	            	        			else
+//	            	        				return;
+	            	        		}
+	            					if(LoginActivity.id>5)
 	            					{
-	            						j=index%6;
+		            					if(index<LoginActivity.id)
+		            					{
+		            						j=index%6;
+		            					}
+		            					else
+		            						j=index%6-1;
 	            					}
 	            					else
-	            						j=index%6-1;
+	            					{
+	            						if(index<LoginActivity.id)
+		            					{
+		            						j=index-1;
+		            					}
+		            					else
+		            						j=index-2;
+	            					}
 	            					
-	            					
-	            	     			if((index!=LoginActivity.id)&&(GetHttp._Online[index]==true))
+	            	     			if((index!=LoginActivity.id)&&(index>=_startIndex)&&
+	            	     					(index<_endIndex)&&(GetHttp._Online[index]==true))
 	            					{
 	            						if(GetHttp._stage[index]==GetHttp.FREE)
 	            				        {
@@ -1175,7 +1216,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 	            						}
 //	            				        j++;
 	            					}
-	            	     			else if((index!=LoginActivity.id)&&(GetHttp._Online[index]==false))
+	            	     			else if((index!=LoginActivity.id)&&(index>=_startIndex)&&
+	            	     					(index<_endIndex)&&(GetHttp._Online[index]==false))
 	            	     			{
 	            	     				validMarker[index] = false;
 	            	     				targetText[j].setTextColor(Color.parseColor("#ff0000"));
@@ -1205,8 +1247,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
             	        	}
             	        	else
             	        	{
-            	        		Toast.makeText(getApplicationContext(),"Please wait!", Toast.LENGTH_SHORT)
-								.show();
+            	        		if(type_value==type_fight)
+            	        			Toast.makeText(getApplicationContext(),"Please wait!", Toast.LENGTH_SHORT)
+            	        				.show();
             	        	}
             
             		        GetHttp.flag_update = false;
@@ -1816,9 +1859,13 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 			LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 			myLong = location.getLongitude();
 			myLat = location.getLatitude();
+			if(flag_firt_update_map==true)
+				myLocation.remove();
+			
 			myLocation = mMap.addMarker(new MarkerOptions()
 	        .position(new LatLng(myLat,myLong))
 	        .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow_blue)));
+			flag_firt_update_map = true;
 			if(zoomMap==false)
         	{
 				Log.d("zoom","zoom 15");
@@ -1852,134 +1899,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 
 		}
 		
-	   
-		private final double degreesPerRadian = 180.0 / Math.PI;	
-		private void DrawArrowHead(GoogleMap mMap, LatLng from, LatLng to){
-		    // obtain the bearing between the last two points
-		    double bearing = GetBearing(from, to);
-
-		    // round it to a multiple of 3 and cast out 120s
-		    double adjBearing = Math.round(bearing / 3) * 3;
-		    while (adjBearing >= 120) {
-		        adjBearing -= 120;
-		    }
-
-		    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-		    StrictMode.setThreadPolicy(policy); 
-
-		    // Get the corresponding triangle marker from Google        
-		    URL url;
-		    Bitmap image = null;
-
-		    try {
-		        url = new URL("http://www.google.com/intl/en_ALL/mapfiles/dir_" + String.valueOf((int)adjBearing) + ".png");
-		        try {
-		            image = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-		        } catch (IOException e) {
-		            // TODO Auto-generated catch block
-		            e.printStackTrace();
-		        }
-		    } catch (MalformedURLException e) {
-		        // TODO Auto-generated catch block
-		        e.printStackTrace();
-		    }
-
-		    if (image != null){
-
-		        // Anchor is ratio in range [0..1] so value of 0.5 on x and y will center the marker image on the lat/long
-		        float anchorX = 0.5f;
-		        float anchorY = 0.5f;
-
-		        int offsetX = 0;
-		        int offsetY = 0;
-
-		        // images are 24px x 24px
-		        // so transformed image will be 48px x 48px
-
-		        //315 range -- 22.5 either side of 315
-		        if (bearing >= 292.5 && bearing < 335.5){
-		            offsetX = 24;
-		            offsetY = 24;
-		        }
-		        //270 range
-		        else if (bearing >= 247.5 && bearing < 292.5){
-		            offsetX = 24;
-		            offsetY = 12;
-		        }
-		        //225 range
-		        else if (bearing >= 202.5 && bearing < 247.5){
-		            offsetX = 24;
-		            offsetY = 0;
-		        }
-		        //180 range
-		        else if (bearing >= 157.5 && bearing < 202.5){
-		            offsetX = 12;
-		            offsetY = 0;
-		        }
-		        //135 range
-		        else if (bearing >= 112.5 && bearing < 157.5){
-		            offsetX = 0;
-		            offsetY = 0;
-		        }
-		        //90 range
-		        else if (bearing >= 67.5 && bearing < 112.5){
-		            offsetX = 0;
-		            offsetY = 12;
-		        }
-		        //45 range
-		        else if (bearing >= 22.5 && bearing < 67.5){
-		            offsetX = 0;
-		            offsetY = 24;
-		        }
-		        //0 range - 335.5 - 22.5
-		        else {
-		            offsetX = 12;
-		            offsetY = 24;
-		        }
-
-		        Bitmap wideBmp;
-		        Canvas wideBmpCanvas;
-		        Rect src, dest;
-
-		        // Create larger bitmap 4 times the size of arrow head image
-		        wideBmp = Bitmap.createBitmap(image.getWidth() * 2, image.getHeight() * 2, image.getConfig());
-
-		        wideBmpCanvas = new Canvas(wideBmp); 
-
-		        src = new Rect(0, 0, image.getWidth(), image.getHeight());
-		        dest = new Rect(src); 
-		        dest.offset(offsetX, offsetY); 
-
-		        wideBmpCanvas.drawBitmap(image, src, dest, null);
-
-		        mMap.addMarker(new MarkerOptions()
-		        .position(to)
-		        .icon(BitmapDescriptorFactory.fromBitmap(wideBmp))
-		        .anchor(anchorX, anchorY));
-		    }
-		}
-
-		private double GetBearing(LatLng from, LatLng to){
-		    double lat1 = from.latitude * Math.PI / 180.0;
-		    double lon1 = from.longitude * Math.PI / 180.0;
-		    double lat2 = to.latitude * Math.PI / 180.0;
-		    double lon2 = to.longitude * Math.PI / 180.0;
-
-		    // Compute the angle.
-		    double angle = - Math.atan2( Math.sin( lon1 - lon2 ) * Math.cos( lat2 ), Math.cos( lat1 ) * Math.sin( lat2 ) - Math.sin( lat1 ) * Math.cos( lat2 ) * Math.cos( lon1 - lon2 ) );
-
-		    if (angle < 0.0)
-		        angle += Math.PI * 2.0;
-
-		    // And convert result to degrees.
-		    angle = angle * degreesPerRadian;
-
-		    return angle;
-		}
-
-
-
-		@Override
+	   		@Override
 		public void onProviderDisabled(String provider) {
 			// TODO Auto-generated method stub
 			
@@ -2200,24 +2120,24 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener, Senso
 		
 	}
 	
-	public void rotateDrawable(float angle)
-	{
-	  Bitmap arrowBitmap = BitmapFactory.decodeResource(this.getResources(), 
-	                                                    R.drawable.pin_arrow_blue);
-	  // Create blank bitmap of equal size
-	  Bitmap canvasBitmap = arrowBitmap.copy(Bitmap.Config.ARGB_8888, true);
-	  canvasBitmap.eraseColor(0x00000000);
-
-	  // Create canvas
-	  Canvas canvas = new Canvas(canvasBitmap);
-
-	  // Create rotation matrix
-	  Matrix rotateMatrix = new Matrix();
-	  rotateMatrix.setRotate(angle, canvas.getWidth()/2, canvas.getHeight()/2);
-
-	  // Draw bitmap onto canvas using matrix
-	  canvas.drawBitmap(arrowBitmap, rotateMatrix, null);
-
-	  //return new BitmapDrawable(canvasBitmap); 
-	}
+//	public void rotateDrawable(float angle)
+//	{
+//	  Bitmap arrowBitmap = BitmapFactory.decodeResource(this.getResources(), 
+//	                                                    R.drawable.pin_arrow_blue);
+//	  // Create blank bitmap of equal size
+//	  Bitmap canvasBitmap = arrowBitmap.copy(Bitmap.Config.ARGB_8888, true);
+//	  canvasBitmap.eraseColor(0x00000000);
+//
+//	  // Create canvas
+//	  Canvas canvas = new Canvas(canvasBitmap);
+//
+//	  // Create rotation matrix
+//	  Matrix rotateMatrix = new Matrix();
+//	  rotateMatrix.setRotate(angle, canvas.getWidth()/2, canvas.getHeight()/2);
+//
+//	  // Draw bitmap onto canvas using matrix
+//	  canvas.drawBitmap(arrowBitmap, rotateMatrix, null);
+//
+//	  //return new BitmapDrawable(canvasBitmap); 
+//	}
 }
