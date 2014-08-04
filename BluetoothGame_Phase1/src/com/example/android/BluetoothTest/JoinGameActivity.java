@@ -125,10 +125,9 @@ public class JoinGameActivity extends Activity {
 						.setPositiveButton("Yes",
 								new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int id) {
-										LoginActivity.flag_getpost = LoginActivity.HTTP_BUZY;
+										
 										GetHttp.resultGet = "";
 										Log.e("http", "+ HTTP BUZY LOGOUT +");
-										GetHttp.caseget = GetHttp.LOGOUT;
 										logout.execute("http://54.255.184.201/api/v1/auth/logout?_token="+LoginActivity.token);
 										Log.d("post","get: http://54.255.184.201/api/v1/auth/logout?_token="+LoginActivity.token);
 										GetHttp.setOnPost(new OnPost(){
@@ -150,7 +149,7 @@ public class JoinGameActivity extends Activity {
 										        }
 										        else
 										        	Log.e("post", "Logout Response Empty");
-										        LoginActivity.flag_getpost = LoginActivity.HTTP_FREE;
+										
 										        Log.e("http", "+ HTTP FREE LOGOUT+");
 											}
 										});

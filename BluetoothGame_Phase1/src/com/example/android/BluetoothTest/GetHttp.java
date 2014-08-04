@@ -29,36 +29,7 @@ public class GetHttp extends AsyncTask<String, Void, String>
 	
 //	Player Player1,Player2,Player3,Player4,Player5;
 //	 Player[] PlayerArr = new Player[5];
-	 static Boolean[] _stage = new Boolean[11];
-	 static String[] _detailStage = new String[11];
-	 static String[] _Long= new String[11];
-	 static String[] _Lat = new String[11];
-	 static String[] _BTAddress = new String[11];
-	 static Boolean[] _Online = new Boolean[11];
-	 static int HIT=1;
-	 static int FIGHT=2;
-	 static int FIGHT_VIEW=3;
-	 static int UPDATE = 4;
-	 static int LOGOUT = 5;
-	 static String _FREE ="free";
-	 static String _BE_TARGETED ="be_targeted";
-	 static String _HUNTING ="hunting";
 	 
-	 static Boolean FREE = true;
-	 static Boolean NOT_FREE = false;
-	 
-	 static Boolean flag_update = false;
-	
-	 static int caseget = 0;
-	 static int[] LatIndex = new int[11];
-	 static int[] LogIndex = new int[11];
-	 static int[] StageIndex = new int[12];
-	 static int[] BTAddressIndex = new int[11];
-	 static int[] PosIndex = new int[12];
-	 static int[] OnlineIndex = new int[11];
-	
-	 static Boolean choseTarget=false;
-	 static int cntUserId;
 	
 	interface OnPost{
 		void onpost(String result);

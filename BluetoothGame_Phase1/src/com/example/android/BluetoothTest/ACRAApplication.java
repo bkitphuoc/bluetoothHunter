@@ -23,11 +23,21 @@ mode = ReportingInteractionMode.TOAST
 )
 
 public class ACRAApplication extends Application {
+	 public ConnectWebSocket connecWebSocket;
+	 
+	 private static ACRAApplication mInstance;
+	
 	  @Override
 	  public void onCreate() {
 	    ACRA.init(this);
 //	    ACRA.getErrorReporter().setReportSender(new HockeySender());
-
+	    mInstance = this;
+	    
+	    connecWebSocket = new ConnectWebSocket();
 	    super.onCreate();
 	  }
+	  
+	  public static synchronized ACRAApplication getInstance() {
+		  return mInstance;
+		 }
 	}

@@ -25,8 +25,8 @@
         android:gravity="center"
         android:orientation="horizontal" >
 
-        <Button
-            android:id="@+id/button_result"
+        <TextView
+            android:id="@+id/textview_result"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#0f1bb0"
