@@ -112,15 +112,15 @@ public class BluetoothService {
         if (D) Log.d(TAG, "setState() " + mState + " -> " + state);
         if(mState==STATE_LISTEN && state == STATE_CONNECTED)
         {
-        	BluetoothTest.role = BluetoothTest.TARGET;
+        	BluetoothTest.instance.role = BluetoothTest.TARGET;
         }
         else if(mState==STATE_LISTEN && state == STATE_CONNECTING)
         {
-        	BluetoothTest.role = BluetoothTest.HUNTER;
+        	BluetoothTest.instance.role = BluetoothTest.HUNTER;
         }
         else if(state==STATE_LISTEN||state==STATE_NONE)
         {
-        	BluetoothTest.role = BluetoothTest.NO_PLAY;
+        	BluetoothTest.instance.role = BluetoothTest.NO_PLAY;
         }
         
         mState = state;
@@ -486,7 +486,7 @@ public class BluetoothService {
             // Start the connected thread
             isServer = false;
             isClient = true;
-            BluetoothTest.role = BluetoothTest.HUNTER;
+            BluetoothTest.instance.role = BluetoothTest.HUNTER;
             connected(mmSocket, mmDevice, mSocketType);
         }
 

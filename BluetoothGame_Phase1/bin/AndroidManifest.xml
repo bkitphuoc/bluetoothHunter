@@ -95,14 +95,20 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/select_device"
             android:theme="@android:style/Theme.Holo.Dialog" />
-        
+        <!-- 
+        <activity
+            android:name="com.example.android.BluetoothTest.WebSocket"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/select_device"
+            android:theme="@android:style/Theme.Holo.Dialog" />
+         -->
         <activity android:name="org.acra.CrashReportDialog"
               android:launchMode="singleInstance"
               android:excludeFromRecents="true"
               android:finishOnTaskLaunch="true" />
         
         
-        <receiver android:name="BluetoothTest" >
+        <receiver android:name="com.example.android.BluetoothTest.BluetoothTest" >
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>

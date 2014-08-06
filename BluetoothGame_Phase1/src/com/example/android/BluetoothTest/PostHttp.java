@@ -46,9 +46,9 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 	    	
 	    	result1 = result;
 	    	LoginActivity.flag_getpost = LoginActivity.HTTP_FREE;
-	    	Log.e("http", "+ HTTP POST FREE +");
-	    	Log.d("post", "longitude="+Double.toString(BluetoothTest.myLong) +
-	        		",latitude="+Double.toString(BluetoothTest.myLat) +",limit:5");
+//	    	Log.e("http", "+ HTTP POST FREE +");
+//	    	Log.d("post", "longitude="+Double.toString(BluetoothTest.myLong) +
+//	        		",latitude="+Double.toString(BluetoothTest.myLat) +",limit:5");
 	    	
 	   }
 	
@@ -80,11 +80,11 @@ public class PostHttp extends AsyncTask<String, Void, String> {
 	        }
 	        else if(casepost==TRACKING)
 	        {
-	        	jsonObject.put("longitude", Double.toString(BluetoothTest.myLong) );
-		        jsonObject.put("latitude",Double.toString(BluetoothTest.myLat) );
+	        	jsonObject.put("longitude", Double.toString(BluetoothTest.instance.myLong) );
+		        jsonObject.put("latitude",Double.toString(BluetoothTest.instance.myLat) );
 		        jsonObject.put("limit","5");
-		        Log.d("post", "longitude="+Double.toString(BluetoothTest.myLong) +
-		        		",latitude="+Double.toString(BluetoothTest.myLat) +",limit:5");
+		        Log.d("post", "longitude="+Double.toString(BluetoothTest.instance.myLong) +
+		        		",latitude="+Double.toString(BluetoothTest.instance.myLat) +",limit:5");
 	        }
 	        // 4. convert JSONObject to JSON to String
 	        json = jsonObject.toString();

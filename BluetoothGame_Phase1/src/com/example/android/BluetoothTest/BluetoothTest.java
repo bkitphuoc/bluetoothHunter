@@ -11,7 +11,6 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
 import com.crittercism.app.Crittercism;
-import com.example.android.BluetoothTest.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -71,6 +70,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -102,28 +103,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 
 	/************ DEFINE *************/
 	private static final String TAG = "Shooting Game";
-	static final boolean D = true;
-	// private static final boolean B = true;
-//	final static String TYPE_SUBSCRIBE = "subscribe";
-//	final static String TYPE_TRACKING = "tracking";
-//	final static String TYPE_FIGHT ="fight";
-//	final static String TYPE_HIT="hit";
-//	final static String TYPE_WITHDRAW = "withdraw";
-//	
-//	// socket server
-//	static int socNONE = 0;
-//	static int socLOGIN = 1;
-//	static int socTRACKING = 2;
-//	static int socFIGHT = 3;
-//	static int socHIT = 4;
-//	static int socWITHDRAW = 5;
-//	static int socFAIL = 6;
-	
-//	public static WebSocketClient mWebSocketClient;
-//	static Boolean flag_proc_mess = false;
-//    static String messageFromServer;
-//    static String type_value="";
-//    static int type_state = ConnectWebSocket.socNONE;
+	final boolean D = true;
 
 	// Message types sent from the BluetoothChatService Handler
 	public static final int MESSAGE_STATE_CHANGE = 1;
@@ -155,56 +135,59 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 	/************** FLAG ****************/
 	public static Boolean flag_play = false;
 	public static Boolean flag_shoot = false;
-	static Boolean flag_stop_game = false;
+	Boolean flag_stop_game = false;
 	private Boolean flag_win = false;
-	static Boolean flag_vibra = false;
-	static Boolean flag_resultbtn = false;
-	static Boolean flag_channel = false;
-	static Boolean flag_update = false;
+	Boolean flag_vibra = false;
+	Boolean flag_resultbtn = false;
+	Boolean flag_channel = false;
+	Boolean flag_update = false;
+	Boolean flag_first_time_play=false;
+	int complete_login = 0;
 	
-	static Boolean flag_firt_update_map = false;
+	Boolean flag_firt_update_map = false;
 	private boolean localPlayIsPressed = false;
 	private boolean remotePlayIsPressed = false;
 	boolean isConnected = false;
 	public static boolean resetCommandIsTrue = false;
-	static Boolean zoomMap = false;
-	static Boolean showInfo = false;
+	Boolean zoomMap = false;
+	Boolean showInfo = false;
 	
-    static Boolean isTracking = false;
+    Boolean isTracking = false;
     /****************PARMETER LOGIC*******************/
-    static int targetId=0;
-	static int _startIndex =0;
-	static int _endIndex = 0;
-	static int indexInfor =0;
-	static int role = 0;
+    int targetId;
+	int _startIndex =0;
+	int _endIndex = 0;
+	int indexInfor =0;
+	int role = 0;
 	/*****************PARAMETER GRAPHIC*****************/
-	public static Button mWithdrawButton;
-	public static Button mPlayButton;
+	public  Button mWithdrawButton;
+	public  Button mPlayButton;
+	public  Button mMyLocButton;
 	static TextView ResultText;
 	/*****************PARAMETER DISPLAY******************/
 	private TextView mWarningText;	
 	private StringBuffer mOutStringBuffer;	
-	public static BluetoothDevice device;
-	static String sendMessage="";
+	public BluetoothDevice device;
+	String sendMessage="";
 	TextView rssi_msg;
-	static TextView rssi_value;
-	static GoogleMap mMap;
-	static MapFragment fm;
-	static View myview;
+	TextView rssi_value;
+	GoogleMap mMap;
+	MapFragment fm;
+	 View myview;
 	LocationManager locationManager ;
 	LocationListener locationListener;
-	static double myLong;
-	static double myLat;
+	double myLong;
+	double myLat;
 	Marker Target;
-	public static Marker[] MarkerArr = new Marker[11];
-	static Boolean[] validMarker = new Boolean[11];
-	static TextView distanceText[] = new TextView[4];
-	static TextView targetText[]= new TextView[4];
+	public Marker[] MarkerArr = new Marker[11];
+	Boolean[] validMarker = new Boolean[11];
+	TextView distanceText[] = new TextView[4];
+	TextView targetText[]= new TextView[4];
 	TextView newTarget; 
 	String address = "";
-	public static Handler handle_update,handle_blinkScreen,handle_info,handle_shooting;
-	
-	static Vibrator v_target;
+	public static Handler handle_update,handle_blinkScreen,handle_shooting;
+	public Handler handle_info;
+	 Vibrator v_target;
 
 	
     /*************PARAMETER SENSOR*****************/
@@ -220,54 +203,55 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
  	private SensorManager sm;
  	LatLng latLng = null;
  	float degree;
- 	static Marker myLocation;
+ 	Marker myLocation;
  	/*************PARAMETER INFOR PLAYER************/
- 	static Boolean[] _stage = new Boolean[11];
-	 static String[] _detailStage = new String[11];
-	 static String[] _Long= new String[11];
-	 static String[] _Lat = new String[11];
-	 static String[] _BTAddress = new String[11];
-	 static Boolean[] _Online = new Boolean[11];
+ 	 Boolean[] _stage = new Boolean[11];
+	 String[] _detailStage = new String[11];
+	 String[] _Long= new String[11];
+	 String[] _Lat = new String[11];
+	 String[] _BTAddress = new String[11];
+	 Boolean[] _Online = new Boolean[11];
 
-	 static String _FREE ="free";
-	 static String _BE_TARGETED ="be_targeted";
-	 static String _HUNTING ="hunting";
+	 String _FREE ="free";
+	 String _BE_TARGETED ="be_targeted";
+	 String _HUNTING ="hunting";
 	 
-	 static Boolean FREE = true;
-	 static Boolean NOT_FREE = false;
+	 Boolean FREE = true;
+	 Boolean NOT_FREE = false;
 	 
-	 static int[] LatIndex = new int[11];
-	 static int[] LogIndex = new int[11];
-	 static int[] StageIndex = new int[12];
-	 static int[] BTAddressIndex = new int[11];
-	 static int[] PosIndex = new int[12];
-	 static int[] OnlineIndex = new int[11];
+	 int[] LatIndex = new int[11];
+	 int[] LogIndex = new int[11];
+	 int[] StageIndex = new int[12];
+	 int[] BTAddressIndex = new int[11];
+	 int[] PosIndex = new int[12];
+	 int[] OnlineIndex = new int[11];
 	
-	 static Boolean choseTarget=false;
-	 static int cntUserId;
-	 static int cnt_checkTarget;
-	 static int cnt_blink = 0;
+	 Boolean choseTarget=false;
+	 int cntUserId;
+	 int cnt_checkTarget;
+	 int cnt_blink;
 	 /****************PARAMETER BLUETOOTH*****************/
 	 private String mConnectedDeviceName = null;
 	 public static BluetoothAdapter mBluetoothAdapter = null;
 	 public static BluetoothService mChatService = null;
  	
 	 public static BluetoothTest instance;
-	 public ConnectWebSocket connecWebSocket;
+//	 public ConnectWebSocket connecWebSocket;
 	 
  	
  	public void initialization(){		
- 		connecWebSocket = ACRAApplication.getInstance().connecWebSocket;
+// 		ACRAApplication.getInstance().connecWebSocket = ACRAApplication.getInstance().connecWebSocket;
 		//flag
 		flag_play = false;
 		flag_win = false;
 		flag_vibra = false;
 		flag_resultbtn = false;
-//		WebSocket.type_state = WebSocket.socNONE;
-//		WebSocket.flag_proc_mess = false;
-		connecWebSocket.flag_proc_mess = false;
-		connecWebSocket.type_state = connecWebSocket.socNONE;
+		flag_first_time_play=false;
+		isTracking = false;
+		ACRAApplication.getInstance().connecWebSocket.flag_proc_mess = false;
+		ACRAApplication.getInstance().connecWebSocket.type_state = ACRAApplication.getInstance().connecWebSocket.socNONE;
 		flag_firt_update_map = false;
+		complete_login = 0;
 		
 		//bluetooth
 		localPlayIsPressed = false;
@@ -279,6 +263,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 		zoomMap = false;
 		showInfo = false;
 		indexInfor =0;
+		myLat = new Double(0);
+		myLong = new Double(0);
 		
 		//player
 		targetId=0;
@@ -322,6 +308,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 			}
 		}
 		initialization();
+		instance = this;
+		
 		GoogleMapOptions a = new GoogleMapOptions();
     	a.compassEnabled(true);
     	// get infor id, token from file
@@ -353,6 +341,12 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 		for(int i=_startIndex;i<_endIndex;i++)
     	{
     		validMarker[i]=false;
+    		_BTAddress[i]="null";
+    		_Lat[i]="null";
+    		_Long[i]="null";
+    		_Online[i]=false;
+    		_detailStage[i]= _FREE;
+    		
     	}
 		
 		int status = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getBaseContext());		 
@@ -373,8 +367,12 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
         	locationListener = new MyLocationListener();
         	
             // Enabling MyLocation Layer of Google Map
-        	//mMap.setMyLocationEnabled(true);
+//        	mMap.setMyLocationEnabled(true);
+        	mMap.setIndoorEnabled(true);
+        	
         	mMap.getUiSettings().setAllGesturesEnabled(true);
+        	mMap.getUiSettings().setCompassEnabled(false);
+        	
         	mMap.setOnMarkerClickListener((OnMarkerClickListener) this);
         	
             // Getting LocationManager object from System Service LOCATION_SERVICE
@@ -403,7 +401,8 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 			finish();
 			return;
 		}        
-//		registerReceiver(receiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+		registerReceiver(receiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
+		
 		mPlayButton = (Button) findViewById(R.id.button_play);
 		mPlayButton.setEnabled(true);
 		mPlayButton.setBackgroundColor(0xFFFFFFFF);
@@ -413,8 +412,18 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 		mWithdrawButton.setBackgroundColor(0xFFFFFFFF);
 		mWithdrawButton.setVisibility(View.INVISIBLE);
 		
+//		mMyLocationButton = (Button) findViewById(R.id.button_myLocation);
+		
 		ResultText = (TextView)findViewById(R.id.textview_result);
 		ResultText.setVisibility(View.INVISIBLE);
+		
+		mMyLocButton = (Button) findViewById(R.id.locbtn);
+		mMyLocButton.setBackgroundResource(R.drawable.locbtn);
+//		RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)mMyLocButton.getLayoutParams();
+//		params.width = BluetoothTest.this.findViewById(R.id.locbtn).getWidth();
+//        params.height = params.width;                           
+//        mMyLocButton.setLayoutParams(params);
+		
 		
 		rssi_msg = (TextView) findViewById(R.id.rssi);
 		rssi_value = (TextView) findViewById(R.id.valuerssi);
@@ -424,7 +433,17 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 		sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
                 SensorManager.SENSOR_DELAY_GAME);
 		
-		instance = this;
+		mMyLocButton.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				CameraUpdate center=
+				        CameraUpdateFactory.newLatLng(new LatLng(instance.myLat,
+				                                                 instance.myLong));
+				mMap.moveCamera(center);
+			}
+		});
 		
 	}
 	private MapFragment findFragmentById(int mapgame) {
@@ -445,12 +464,11 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 	    } else
 		{
 			if (mChatService == null){
-				Log.e(TAG, "before setupChat() menthod");
+				Log.e(TAG, "before playGame() menthod");
 				playGame();
 			}
 			btEnsureDiscoverable();
 		}
-//		connecWebSocket.connect();
 
 	}
 
@@ -469,9 +487,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 	}
 	private void playGame() {
 		// TODO Auto-generated method stub
-//		WebSocket.instance.connect();
-		connecWebSocket.connect(BluetoothTest.this);
-		Log.d(TAG, "setupChat()");
+		
+		Log.d(TAG, "playGame()");
+		ACRAApplication.getInstance().connecWebSocket.connect(BluetoothTest.this);
+		
 		mPlayButton.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -521,11 +540,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 					                mPlayButton.setText("Reset");
 					                mPlayButton.setBackgroundColor(0xFFFFFFFF);
 					                handle_shooting.removeCallbacks(updateStateButton);
-					                
-//					                WebSocket.socHit();
-					                connecWebSocket.socHit();
-
-								
+					                ACRAApplication.getInstance().connecWebSocket.socHit();
 								}
 								else
 									Toast.makeText(getApplicationContext(), "Please wait! Not ready.", Toast.LENGTH_SHORT)
@@ -570,13 +585,11 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 											String message = "new session";
 											sendMessage = message;
 											btSendMessage(message);
-							                //
 											targetId = 0;
 							                choseTarget=false;
 					    					mWithdrawButton.setVisibility(View.INVISIBLE);
 					    					setStatus(R.string.title_no_play);
-//					    					WebSocket.socWithdraw();
-					    					connecWebSocket.socWithdraw();
+					    					ACRAApplication.getInstance().connecWebSocket.socWithdraw();
 										}
 									})
 								.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -622,6 +635,32 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
     		// Register this class as a listener for the accelerometer sensor
 		sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
 		                    SensorManager.SENSOR_DELAY_GAME);
+		
+//		ACRAApplication.getInstance().connecWebSocket.connect(BluetoothTest.this);
+	}
+	
+	@Override
+	public synchronized void onPause() {
+		super.onPause();
+		if (D)
+			Log.e(TAG, "- ON PAUSE -");
+		sm.unregisterListener(this);
+		
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		if (D)
+			Log.e(TAG, "-- ON STOP --");
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (D)
+			Log.e(TAG, "--- ON DESTROY ---");
+		unregisterReceiver(receiver);
 	}
 	@Override
 	public void onBackPressed() {
@@ -645,7 +684,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 											"----------------- service STOP ------------------");
 								}
 //								WebSocket.socWithdraw();
-								connecWebSocket.socWithdraw();
+								ACRAApplication.getInstance().connecWebSocket.socWithdraw();
 								locationManager.removeUpdates(locationListener);;
 								targetId = 0;
 				                choseTarget=false;
@@ -656,14 +695,14 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 				                showInfo=false;
 				                zoomMap = false;
 				                role = NO_PLAY;				                
-				                connecWebSocket.flag_proc_mess=false;
+				                ACRAApplication.getInstance().connecWebSocket.flag_proc_mess=false;
 				                			                
 								handle_info.removeCallbacks(ShowInfor);
 								handle_shooting.removeCallbacks(updateStateButton);	
 								handle_blinkScreen.removeCallbacks(blinkingScreen);
 								Log.i(TAG, "front finish() menthod");
 //								
-								connecWebSocket.mWebSocketClient.close();
+								ACRAApplication.getInstance().connecWebSocket.mWebSocketClient.close();
 								 mBluetoothAdapter.disable();
 								finish();
 							}
@@ -758,19 +797,19 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 		return true;
 	}
 	
-//	private final BroadcastReceiver receiver = new BroadcastReceiver(){
-//		   @SuppressWarnings("static-access")
-//		@Override
-//		   public void onReceive(Context context, Intent intent) {
-//
-//		    String action = intent.getAction();
-//		    if(device.ACTION_FOUND.equals(action)&& role!=NO_PLAY) {
-//		        int  rssi = intent.getShortExtra(device.EXTRA_RSSI,Short.MIN_VALUE);
-//			        rssi_value.setText(""+rssi+"dBm");
-//			        Log.e("rssi","rssi value"+rssi+"dBm");
-//		    }
-//		  }
-//	};
+	private final BroadcastReceiver receiver = new BroadcastReceiver(){
+		   @SuppressWarnings("static-access")
+		@Override
+		   public void onReceive(Context context, Intent intent) {
+
+		    String action = intent.getAction();
+		    if(device.ACTION_FOUND.equals(action)&& role!=NO_PLAY) {
+		        int  rssi = intent.getShortExtra(device.EXTRA_RSSI,Short.MIN_VALUE);
+			        rssi_value.setText(""+rssi+"dBm");
+			        Log.e("rssi","rssi value"+rssi+"dBm");
+		    }
+		  }
+	};
 	
 	/*****Handler******/
 	static Runnable updateStateButton = new Runnable() {
@@ -779,25 +818,28 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 		public void run() {
 			// TODO Auto-generated method stub
 			Log.d("update", "- Update state button -");
-			Log.d("update", "targetId"+ targetId);
-			Log.d("update", "state bluetooth"+mChatService.getState());
-			if ((mChatService.getState() != BluetoothService.STATE_CONNECTED)) {
-				mPlayButton.setBackgroundColor(0xFFFFFFFF);
-				cnt_checkTarget = 0;
-				ResultText.setVisibility(View.INVISIBLE);
-			}
-			else if((mChatService.getState() == BluetoothService.STATE_CONNECTED))
+			Log.d("update", "targetId"+ instance.targetId);
+			if(mChatService!=null)
 			{
-				Log.e("rssi","rssi discovery");
-				mBluetoothAdapter.startDiscovery();
-				cnt_checkTarget++;	
-				mWithdrawButton.setVisibility(View.VISIBLE);
+				Log.d("update", "state bluetooth"+mChatService.getState());
+				if ((mChatService.getState() != BluetoothService.STATE_CONNECTED)) {
+					instance.mPlayButton.setBackgroundColor(0xFFFFFFFF);
+					instance.cnt_checkTarget = 0;
+					ResultText.setVisibility(View.INVISIBLE);
+				}
+				else if((mChatService.getState() == BluetoothService.STATE_CONNECTED))
+				{
+					Log.e("rssi","rssi discovery");
+					mBluetoothAdapter.startDiscovery();
+					instance.cnt_checkTarget++;	
+					instance.mWithdrawButton.setVisibility(View.VISIBLE);
+				}
 			}
-			if(cnt_checkTarget>3)
+			if(instance.cnt_checkTarget>3)
 			{
-				mPlayButton.setBackgroundColor(0xFFFF0000);
+				instance.mPlayButton.setBackgroundColor(0xFFFF0000);
 				flag_shoot = true;
-				cnt_checkTarget = 4;
+				instance.cnt_checkTarget = 4;
 			}
 			handle_shooting.postDelayed(this, 1000);
 		}
@@ -936,21 +978,21 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 			public void run() {
 				// TODO Auto-generated method stub
 				Log.e("update", "- Update state button -");
-				Log.e("update", "targetId"+ targetId);
+				Log.e("update", "targetId"+ instance.targetId);
 				Log.e("update", "state bluetooth"+mChatService.getState());
 				ColorDrawable[] colorBlink = {new ColorDrawable(Color.parseColor("#000000")), new ColorDrawable(Color.parseColor("#FF0000"))};
 	            TransitionDrawable trans = new TransitionDrawable(colorBlink);
-	            myview.setBackground(trans);
+	            instance.myview.setBackground(trans);
 	            trans.startTransition(200);
-	            cnt_blink++;
-	            if(cnt_blink<5)
+	            instance.cnt_blink++;
+	            if(instance.cnt_blink<5)
 	            {
 	            	handle_blinkScreen.postDelayed(this, 500);
 	            }
 	            else 
 	            {
-	            	cnt_blink=0;
-	            	myview.setBackground(null);;
+	            	instance.cnt_blink=0;
+	            	instance.myview.setBackground(null);;
 	            	handle_blinkScreen.removeCallbacks(this);
 	            }
 	            
@@ -960,7 +1002,9 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 		};
 		 Runnable ShowInfor = new Runnable(){
 	        public void run(){
+	        	Log.e("ShowInfor","ShowInfor");
 	             //call the service here
+
 				if(indexInfor!=LoginActivity.id)
 				{
 					if(validMarker[indexInfor])
@@ -972,11 +1016,14 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 				indexInfor++;
 				if(indexInfor>(_endIndex-1))
 					indexInfor=_startIndex;
-				if((mChatService.getState() == BluetoothService.STATE_CONNECTED)&&(flag_play==false))
+				if(mChatService!=null)
 				{
-					handle_shooting.post(updateStateButton);
-					rssi_value.setText("updating...");
-					flag_play = true;
+					if((mChatService.getState() == BluetoothService.STATE_CONNECTED)&&(flag_play==false))
+					{
+						handle_shooting.post(updateStateButton);
+						rssi_value.setText("updating...");
+						flag_play = true;
+					}
 				}
 				if(role != NO_PLAY)
 				{
@@ -1017,7 +1064,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 				}
 			
 	             ////// set the interval time here
-	             handle_info.postDelayed(this,2000);
+	             handle_info.postDelayed(this,1000);
 	        }
 	   };
 	@Override
@@ -1046,7 +1093,7 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 				if( choseTarget==false)
 				{
 					Log.d("fight","BTAddress"+ _BTAddress[ cntUserId]);
-					if(! _BTAddress[ cntUserId].equals("null"))
+					if(!_BTAddress[cntUserId].equals("null"))
 					{
 						
 						AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -1055,10 +1102,10 @@ GooglePlayServicesClient.OnConnectionFailedListener,OnMarkerClickListener,Sensor
 								.setPositiveButton("Yes",
 										new DialogInterface.OnClickListener() {
 											public void onClick(DialogInterface dialog, int id) {
-//												WebSocket.mWebSocketClient.send("{\"type\":\"fight\",\"target\":\""+ cntUserId+"\"}");
-												ConnectWebSocket.mWebSocketClient.send("{\"type\":\"fight\",\"target\":\""+ cntUserId+"\"}");
-												 choseTarget = true;
-												targetId =  cntUserId;
+												ACRAApplication.getInstance().connecWebSocket.mWebSocketClient.send("{\"type\":\"fight\",\"target\":\""+ cntUserId+"\"}");
+												Log.e("socket","send request fight");
+												instance.choseTarget = true;
+												instance.targetId =  cntUserId;
 											}
 										})
 								.setNegativeButton("No", new DialogInterface.OnClickListener() {

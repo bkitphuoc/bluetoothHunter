@@ -14,34 +14,33 @@ import android.util.Log;
 
 public class MyLocationListener implements LocationListener {
 	private static final String TAG = "My location Listener";
-	public ConnectWebSocket connectWebSocket;
-
+	
 	@Override
 	public void onLocationChanged(Location location) {
 		// TODO Auto-generated method stub
-		if (BluetoothTest.D)
+		if (BluetoothTest.instance.D)
 			Log.e(TAG, "-- ON Change Location --");
-		
 		LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-		BluetoothTest.myLong = location.getLongitude();
-		BluetoothTest.myLat = location.getLatitude();
-		if(BluetoothTest.flag_firt_update_map==true)
-			BluetoothTest.myLocation.remove();
+		BluetoothTest.instance.myLong = location.getLongitude();
+		BluetoothTest.instance.myLat = location.getLatitude();
+		if(BluetoothTest.instance.flag_firt_update_map==true)
+			BluetoothTest.instance.myLocation.remove();
 		
-		BluetoothTest.myLocation = BluetoothTest.mMap.addMarker(new MarkerOptions()
-        .position(new LatLng(BluetoothTest.myLat,BluetoothTest.myLong))
+		
+		BluetoothTest.instance.myLocation = BluetoothTest.instance.mMap.addMarker(new MarkerOptions()
+        .position(new LatLng(BluetoothTest.instance.myLat,BluetoothTest.instance.myLong))
         .icon(BitmapDescriptorFactory.fromResource(R.drawable.pin_arrow_blue)));
-		BluetoothTest.flag_firt_update_map = true;
-		if(BluetoothTest.zoomMap==false)
+		BluetoothTest.instance.flag_firt_update_map = true;
+		if(BluetoothTest.instance.zoomMap==false)
     	{
 			Log.d("zoom","zoom 15");
 		    CameraUpdate cameraUpdate1 = CameraUpdateFactory.newLatLngZoom(latLng, 15.0f);
-		    BluetoothTest.mMap.animateCamera(cameraUpdate1, new CancelableCallback() {
+		    BluetoothTest.instance.mMap.animateCamera(cameraUpdate1, new CancelableCallback() {
 				
 				@Override
 				public void onFinish() {
 					// TODO Auto-generated method stub
-					BluetoothTest.zoomMap = true;
+					BluetoothTest.instance.zoomMap = true;
 				}
 				
 				@Override
@@ -51,15 +50,22 @@ public class MyLocationListener implements LocationListener {
 				}
 			});
     	}
-		if(BluetoothTest.isTracking==true)
+//		if(BluetoothTest.instance.showInfo==false)
+//		{
+//			BluetoothTest.instance.showInfo = true;
+//			BluetoothTest.instance.handle_info.postDelayed(BluetoothTest.instance.ShowInfor, 0);
+//			Log.e("Info","Show infor");
+//		}
+		if(BluetoothTest.instance.isTracking==true)
 		{
 			try {
-				Log.d("tracking","send tracking");
-//				WebSocket.mWebSocketClient.send("{\"type\":\"tracking\",\"longitude\":\""+BluetoothTest.myLong+"\",\"latitude\":\""+BluetoothTest.myLat+"\"}");
-				connectWebSocket.mWebSocketClient.send("{\"type\":\"tracking\",\"longitude\":\""+BluetoothTest.myLong+"\",\"latitude\":\""+BluetoothTest.myLat+"\"}");
-				Log.d("tracking","send tracking completed");
+				//if(BluetoothTest.instance.myLong!=0)
+					ACRAApplication.getInstance().connecWebSocket.mWebSocketClient.send("{\"type\":\"tracking\",\"longitude\":\""+BluetoothTest.instance.myLong+"\",\"latitude\":\""+BluetoothTest.instance.myLat+"\"}");
+				
+				Log.d("tracking","send tracking completed - long: "+BluetoothTest.instance.myLong+",lat:"+BluetoothTest.instance.myLat);
 			} catch (Exception e) {
 				// TODO: handle exception
+				Log.d("tracking","can send");
 			}
 			
 		}
