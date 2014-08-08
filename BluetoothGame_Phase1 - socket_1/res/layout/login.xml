@@ -1,0 +1,94 @@
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"   
+        
+        >
+<!-- android:background="@drawable/login"  -->
+      
+        <LinearLayout
+            android:id="@+id/account"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="40dip" 
+            android:layout_centerHorizontal="true">
+           
+
+           <!--  Email Label -->
+
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="User"
+                android:textColor="#ffffff" />
+            <EditText
+                android:id="@+id/UserText"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dip"
+                android:layout_marginTop="5dip"
+                android:layout_centerHorizontal="true"
+                android:singleLine="true" />
+          <!--   Password Label
+ -->
+ 			
+            <TextView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Password"
+                android:textColor="#ffffff" />
+
+            <EditText
+                android:id="@+id/PassText"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dip"
+                android:password="true"
+                android:layout_centerHorizontal="true"
+                android:singleLine="true" />
+         
+        </LinearLayout>
+        <LinearLayout
+		    android:orientation="horizontal"
+		    android:layout_width="300dp"
+		    android:layout_below="@id/account"
+		    android:layout_height="wrap_content"
+		    android:layout_centerHorizontal="true"
+		    
+		    >
+		     
+		        <Button
+		        android:id="@+id/btnSignIn"
+		        android:layout_width="0.0dip"
+		        android:layout_height="fill_parent"
+		        android:text="Sign In"
+		        android:layout_weight="1.0" />
+		         
+		        <Button
+		        android:id="@+id/btnSignUp"
+		        android:layout_width="0.0dip"
+		        android:layout_height="fill_parent"
+		        android:text="Sign Up"
+		        android:layout_weight="1.0" />
+		         
+		</LinearLayout>
+		<!-- <LinearLayout
+	        android:orientation="horizontal"
+	        android:layout_width="match_parent"
+	        android:layout_height="wrap_content" >
+        
+	        <TextView 
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+				android:text="My Mac address:"
+	            />
+	        <TextView 
+	            android:id = "@+id/My_Mac_address"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            />
+    	</LinearLayout> -->
+       <!--  Login Form Ends -->
+
+    </RelativeLayout>
+
